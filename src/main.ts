@@ -5,11 +5,12 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const HOST = configService.get('HOST');
-  const PORT = configService.get('PORT');
 
-  await app.listen(PORT, HOST, () => {
-    console.log(`Server is running on http://${HOST}:${PORT}`);
+  const HOST = configService.get<string>('HOST', 'localhost');
+  const PORT = configService.get<string>('PORT', '8080');
+
+  await app.listen(PORT, () => {
+    console.log(`App running at http://${HOST}:${PORT}`);
   });
 }
 
