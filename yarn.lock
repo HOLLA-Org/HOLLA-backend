@@ -1987,6 +1987,11 @@ anymatch@^3.0.3:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
+api-query-params@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/api-query-params/-/api-query-params-6.0.1.tgz#be5d78e596eaa082ce547d60a5007cfda073ead1"
+  integrity sha512-RGiq0N7IwGjR2m0LqW5nttwk+DgOt2kGA1iO3fDmpcbfxNQxhhNYAkDEnSloq5DBN2f4/xv+vaGILnLO4UR/GA==
+
 append-field@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/append-field/-/append-field-1.0.0.tgz#1e3440e915f0b1203d23748e78edd7b9b5b43e56"
