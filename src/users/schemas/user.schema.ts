@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
+import { ROLES } from '@/constant';
 @Schema({ timestamps: true })
 export class User {
   @Prop()
@@ -20,7 +20,7 @@ export class User {
   @Prop()
   image: string;
 
-  @Prop({ default: 'USER' })
+  @Prop({ type: String, enum: ROLES, default: ROLES.user })
   role: string;
 
   @Prop({ default: false })
