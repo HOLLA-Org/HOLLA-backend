@@ -5,7 +5,11 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { hashPassword } from '@/helpers';
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import aqp from 'api-query-params';
 import { getInfo } from '@/utils';
 import ObjectId from 'mongoose';
@@ -149,7 +153,17 @@ export class UsersService {
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(_id: string) {
+    if (!ObjectId.isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid.`);
+    }
+
+    const hasUser = await this.userModel.findById(_id);
+
+    if (!hasUser) {
+      throw new NotFoundException('User not found!');
+    }
+
+    return hasUser.deleteOne();
   }
 }
