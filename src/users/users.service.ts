@@ -7,6 +7,8 @@ import { hashPassword } from '@/helpers';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import aqp from 'api-query-params';
+import { getInfo } from '@/utils';
+import ObjectId from 'mongoose';
 
 @Injectable()
 export class UsersService {
@@ -81,8 +83,21 @@ export class UsersService {
     return { results, totalPage, totalItems };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(_id: string) {
+    if (!ObjectId.isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid.`);
+    }
+
+    const result = await this.userModel.findOne({ _id });
+
+    if (!result) {
+      throw new BadRequestException(`User id "${_id}" not found.`);
+    }
+
+    return getInfo({
+      object: result,
+      fields: ['_id', 'username', 'email', 'role', 'isActive'],
+    });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
