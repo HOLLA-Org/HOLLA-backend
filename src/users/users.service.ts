@@ -9,6 +9,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import aqp from 'api-query-params';
 import { getInfo } from '@/utils';
 import ObjectId from 'mongoose';
+import { add } from 'lodash';
 
 @Injectable()
 export class UsersService {
@@ -100,8 +101,52 @@ export class UsersService {
     });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(_id: string, updateUserDto: UpdateUserDto) {
+    if (!ObjectId.isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid.`);
+    }
+
+    const { username, email, password, role, phone, address, image } =
+      updateUserDto;
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    const filter = { _id };
+    const update = {
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      phone,
+      address,
+      image,
+    };
+    const options = { new: true };
+
+    const result = await this.userModel.findOneAndUpdate(
+      filter,
+      update,
+      options,
+    );
+
+    if (!result) {
+      throw new BadRequestException(`User id "${_id}" not found.`);
+    }
+
+    return getInfo({
+      object: result,
+      fields: [
+        '_id',
+        'username',
+        'email',
+        'isActive',
+        'role',
+        'phone',
+        'address',
+        'image',
+      ],
+    });
   }
 
   remove(id: number) {
