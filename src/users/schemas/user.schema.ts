@@ -12,6 +12,12 @@ export class User {
   password: string;
 
   @Prop()
+  phone: string;
+
+  @Prop()
+  address: string;
+
+  @Prop()
   image: string;
 
   @Prop({ default: 'USER' })
