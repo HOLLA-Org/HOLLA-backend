@@ -25,10 +25,18 @@ async function bootstrap() {
     .setDescription('API documentation for HoLLa project')
     .setVersion('1.0')
     .addBearerAuth() // Optional: for JWT auth support
+    .addTag('App', 'Application related endpoints')
+    .addTag('Authentication User', 'Authentication related endpoints')
+    .addTag('Users', 'User management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document); // http://localhost:PORT/api-docs
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      // Dòng này sẽ ẩn mục "Schemas"
+      defaultModelsExpandDepth: -1,
+    },
+  }); // http://localhost:PORT/api-docs
 
   await app.listen(PORT, () => {
     console.log(`App running at http://${HOST}:${PORT}`);
