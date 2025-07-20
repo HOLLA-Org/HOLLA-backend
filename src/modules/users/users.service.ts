@@ -13,7 +13,7 @@ import {
 import aqp from 'api-query-params';
 import { getInfo } from '@/utils';
 import ObjectId from 'mongoose';
-import { add } from 'lodash';
+import { UserType } from '@/auth/authUser/auth';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +21,32 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<User>,
     private configService: ConfigService,
   ) {}
+
+  async findById(_id: string) {
+    return await this.userModel.findById(_id);
+  }
+
+  async findByEmail({ email }: { email: string }) {
+    return await this.userModel.findOne({ email });
+  }
+  async findOneByUsername({ username }: { username: string }) {
+    return await this.userModel.findOne({ username });
+  }
+
+  async findEmailByUsername(username: string) {
+    const foundUser = await this.userModel.findOne({ username }).lean();
+    if (!foundUser) throw new BadRequestException('Username not found!');
+
+    return { email: foundUser.email };
+  }
+
+  async findOneByLogin(account: string): Promise<UserType | null> {
+    return this.userModel
+      .findOne({
+        $or: [{ username: account }, { email: account }],
+      })
+      .exec();
+  }
 
   async isUserExist(username: string) {
     const hasUser = await this.userModel.exists({ username });

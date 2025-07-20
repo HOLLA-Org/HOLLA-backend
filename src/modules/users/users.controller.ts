@@ -7,19 +7,20 @@ import {
   Param,
   Delete,
   Query,
+  HttpCode,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ResponseMessage } from '@/decorator/customize';
+import { Public, ResponseMessage } from '@/decorator/customize';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBody,
   ApiParam,
-  ApiQuery,
 } from '@nestjs/swagger';
+import { GetEmailByUserNameDto } from './dto/get-email.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -75,6 +76,15 @@ export class UsersController {
   @ResponseMessage('Update user successfully')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
+  }
+
+  @Public()
+  @Post('get-email-by-username')
+  @HttpCode(200)
+  @ResponseMessage('Get email successfully')
+  getEmailByUsername(@Body() getEmailByUsernameDto: GetEmailByUserNameDto) {
+    const { username } = getEmailByUsernameDto;
+    return this.usersService.findEmailByUsername(username);
   }
 
   @Delete(':id')
