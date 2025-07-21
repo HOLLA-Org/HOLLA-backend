@@ -18,6 +18,7 @@ import { CreateAuthDto } from '@/auth/authUser/dto/create-auth.dto';
 import { ROLES } from '@/constant';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+import { ResendCodeDto } from '@/auth/authUser/dto/resend-code.dto';
 
 @Injectable()
 export class UsersService {
@@ -261,7 +262,7 @@ export class UsersService {
       isActive: false,
       role: ROLES.user,
       codeId: activationCode,
-      codeExpired: dayjs().add(10, 'minutes'),
+      codeExpired: dayjs().add(5, 'minutes'),
     });
 
     // Send mail
@@ -275,7 +276,32 @@ export class UsersService {
       },
     });
 
-    return { _id: user._id, username: user.username };
+    return { _id: user._id, username: user.username, email: user.email };
+  }
+
+  async resendCode(resendCodeDto: ResendCodeDto) {
+    const { email } = resendCodeDto;
+
+    const foundUser = await this.userModel.findOne({ email });
+    if (!foundUser) throw new BadRequestException('Account not found');
+
+    foundUser.codeId = generateCode();
+    foundUser.codeExpired = dayjs().add(5, 'minutes').toDate();
+
+    await foundUser.save();
+
+    // Send mail
+    this.mailerService.sendMail({
+      to: foundUser.email, // List to reciver
+      subject: 'Resend code to your account at HoLLa', // Subject line
+      template: 'resend-code',
+      context: {
+        name: foundUser?.username ?? foundUser?.email,
+        activationCode: foundUser.codeId,
+      },
+    });
+
+    return {};
   }
 
   private isValidPassword(password: string): boolean {
