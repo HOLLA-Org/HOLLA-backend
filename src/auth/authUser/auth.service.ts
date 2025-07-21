@@ -307,4 +307,17 @@ export class AuthService {
       refreshToken: newRefreshToken,
     };
   }
+
+  async logout(userId: string) {
+    const hasUser = await this.usersService.findOneById(userId);
+    if (!hasUser) throw new BadRequestException('User not found!');
+
+    const hasToken = await this.refreshTokenRepo.findOneByUserId(userId);
+    if (!hasToken) throw new BadRequestException('User is already logged out!');
+
+    // Delete the refresh token
+    await hasToken.deleteOne();
+
+    return {};
+  }
 }
