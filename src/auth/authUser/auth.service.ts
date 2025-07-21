@@ -7,6 +7,7 @@ import { TokenService } from '@/modules/token/token.service';
 import { CreateRefreshTokenDto } from '@/modules/token/dto/create-refreshToken.dto';
 import { UserType } from './auth';
 import { comparePassword } from '@/helpers';
+import { CreateAuthDto } from './dto/create-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -67,5 +68,9 @@ export class AuthService {
       accessToken: accessToken,
       refreshToken: refreshToken,
     };
+  }
+
+  async handleRegister(registerDto: CreateAuthDto) {
+    return await this.usersService.handleRegister(registerDto);
   }
 }
