@@ -19,8 +19,7 @@ import { generateCode, generateResetCode } from '@/utils';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RedisService } from '@/modules/redis/redis.service';
 import { ROLES } from '@/constant';
-import { User } from '@/modules/users/schemas/user.schema';
-import { Model } from 'mongoose';
+import { RefreshTokenRepo } from '@/modules/token/token.repo';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +30,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private redisService: RedisService,
     private readonly mailerService: MailerService,
+    private readonly refreshTokenRepo: RefreshTokenRepo,
   ) {}
 
   async validateUser(account: string, password: string) {
@@ -277,5 +277,34 @@ export class AuthService {
     await this.redisService.del(`reset-password-token:${email}`);
 
     return { message: 'Password reset successfully!' };
+  }
+
+  async handleRefreshToken(userId: string, refreshToken: string) {
+    const hasToken = await this.refreshTokenRepo.findOneByUserId(userId);
+    if (!hasToken) throw new UnauthorizedException('Invalid refresh token!');
+
+    // Compare stored refreshToken with provided one
+    if (hasToken.token !== refreshToken)
+      throw new UnauthorizedException('Invalid refresh token!');
+
+    const hasUser: any = await this.usersService.findOneById(userId);
+
+    const payload = { email: hasUser.email, sub: hasUser._id };
+
+    const newAccessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_EXPIRES_IN'), // Expiration for accessToken
+    });
+
+    const newRefreshToken = await this.jwtService.signAsync(payload, {
+      expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRES_IN'), // Expiration for refreshToken
+    });
+
+    // Store refreshToken in the database
+    await this.tokenService.handleRefreshToken(newRefreshToken);
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 }

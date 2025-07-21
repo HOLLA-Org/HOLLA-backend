@@ -140,4 +140,26 @@ export class AuthController {
   ) {
     return this.authService.resetPassword(token, newPass);
   }
+
+  @Post('refresh-token')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Refresh Token' })
+  @ApiResponse({ status: 200, description: 'Refresh token successfully' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string' },
+        refreshToken: { type: 'string' },
+      },
+      required: ['userId', 'refreshToken'],
+    },
+  })
+  @ResponseMessage('Refresh token successfully')
+  refreshToken(
+    @Body('userId') userId: string,
+    @Body('refreshToken') refreshToken: string,
+  ) {
+    return this.authService.handleRefreshToken(userId, refreshToken);
+  }
 }
