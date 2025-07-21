@@ -12,8 +12,7 @@ export class RefreshTokenRepo {
   ) {}
 
   async findOneByUserId(userId: string) {
-    const objectId = new Types.ObjectId(userId);
-    const hasToken = await this.tokenModel.findOne({ userId: objectId });
+    const hasToken = await this.tokenModel.findOne({ user: userId });
     if (!hasToken) throw new NotFoundException();
 
     return hasToken;

@@ -15,6 +15,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { LocalAuthGuard } from './passport/local-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -161,5 +162,15 @@ export class AuthController {
     @Body('refreshToken') refreshToken: string,
   ) {
     return this.authService.handleRefreshToken(userId, refreshToken);
+  }
+
+  @ApiBearerAuth()
+  @Post('logout')
+  @ApiOperation({ summary: 'User Logout' })
+  @ApiResponse({ status: 200, description: 'Logout successfully' })
+  @ResponseMessage('Logout successfully')
+  async logout(@Request() req: any) {
+    const userId = req.user._id;
+    return this.authService.logout(userId);
   }
 }
