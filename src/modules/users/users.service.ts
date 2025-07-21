@@ -1,7 +1,7 @@
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { hashPassword } from '@/helpers';
 import { ConfigService } from '@nestjs/config';
@@ -11,14 +11,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import aqp from 'api-query-params';
-import { generateCode, getInfo } from '@/utils';
+import { getInfo } from '@/utils';
 import ObjectId from 'mongoose';
 import { UserType } from '@/auth/authUser/auth';
-import { CreateAuthDto } from '@/auth/authUser/dto/create-auth.dto';
 import { ROLES } from '@/constant';
-import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
-import { ResendCodeDto } from '@/auth/authUser/dto/resend-code.dto';
 
 @Injectable()
 export class UsersService {
@@ -30,6 +27,19 @@ export class UsersService {
 
   async findById(_id: string) {
     return await this.userModel.findById(_id);
+  }
+
+  async findOneById(_id: string) {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException();
+    }
+
+    const result = await this.findById(_id);
+
+    return getInfo({
+      object: result,
+      fields: ['_id', 'username', 'email', 'role', 'isActive'],
+    });
   }
 
   async findByEmail({ email }: { email: string }) {
