@@ -18,6 +18,7 @@ import { LocalAuthGuard } from './passport/local-auth.guard';
 import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateAuthDto } from './dto/create-auth.dto';
+import { VerifyAccountDto } from './dto/verify-account.dto';
 
 @ApiTags('Authentication User') // Swagger category
 @Controller('auth')
@@ -53,5 +54,16 @@ export class AuthController {
   @ResponseMessage('Register successfully')
   register(@Body() registerDto: CreateAuthDto) {
     return this.authService.handleRegister(registerDto);
+  }
+
+  @Public()
+  @Post('verify')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Verify Account' })
+  @ApiResponse({ status: 200, description: 'Verify account successfully' })
+  @ApiBody({ type: VerifyAccountDto })
+  @ResponseMessage('Verify account successfully')
+  verify(@Body() verifyDto: VerifyAccountDto) {
+    return this.authService.verifyAccount(verifyDto);
   }
 }

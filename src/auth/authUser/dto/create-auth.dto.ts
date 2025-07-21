@@ -11,7 +11,7 @@ import {
 export class CreateAuthDto {
   @ApiProperty({ example: 'vihongminh', description: 'Full name of the user' })
   @IsNotEmpty()
-  fullName: string;
+  username: string;
 
   @ApiProperty({
     example: 'user@example.com',
@@ -46,9 +46,7 @@ export class CreateAuthDto {
     description: 'Valid phone number (optional)',
   })
   @IsOptional()
-  @ValidateIf((obj) => obj.phoneNumber !== null && obj.phoneNumber !== '')
-  @IsPhoneNumber('VN')
-  phoneNumber?: string;
+  phone?: string;
 
   @ApiProperty({
     required: false,
