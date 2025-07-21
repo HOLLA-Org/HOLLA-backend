@@ -200,11 +200,11 @@ export class UsersService {
 
   async handleRegister(registerDto: CreateAuthDto) {
     const {
-      fullName,
+      username,
       email,
       password,
       confirmPassword,
-      phoneNumber,
+      phone,
       address,
       image,
     } = registerDto;
@@ -220,7 +220,7 @@ export class UsersService {
     }
 
     // Check user has exist?
-    const isUserExist = await this.isUserExist(fullName);
+    const isUserExist = await this.isUserExist(username);
     if (isUserExist) {
       throw new BadRequestException(
         `Email ${email} already exists. Please use another email!`,
@@ -236,12 +236,12 @@ export class UsersService {
     }
 
     // Generate a unique username
-    const baseUsername = this.generateUsername(fullName);
-    let username = baseUsername;
+    const baseUsername = this.generateUsername(username);
+    let userName = baseUsername;
     let count = 1;
 
     while (await this.isUserExist(username)) {
-      username = `${baseUsername}${count}`;
+      userName = `${baseUsername}${count}`;
       count++;
     }
 
@@ -252,11 +252,12 @@ export class UsersService {
     const activationCode = generateCode(); // Ensures a 4-digit code
 
     const user = await this.userModel.create({
-      fullName: fullName,
-      username: username,
+      username: userName,
       email,
-      phoneNunber: phoneNumber,
       password: hashedPassword,
+      phone: phone,
+      address: address,
+      image: image,
       isActive: false,
       role: ROLES.user,
       codeId: activationCode,

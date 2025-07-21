@@ -8,6 +8,8 @@ import { CreateRefreshTokenDto } from '@/modules/token/dto/create-refreshToken.d
 import { UserType } from './auth';
 import { comparePassword } from '@/helpers';
 import { CreateAuthDto } from './dto/create-auth.dto';
+import { VerifyAccountDto } from './dto/verify-account.dto';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class AuthService {
@@ -72,5 +74,22 @@ export class AuthService {
 
   async handleRegister(registerDto: CreateAuthDto) {
     return await this.usersService.handleRegister(registerDto);
+  }
+
+  async verifyAccount(verifyAccountDto: VerifyAccountDto) {
+    const { account, codeId } = verifyAccountDto;
+
+    const foundUser = await this.usersService.findOneByLogin(account);
+    if (!foundUser) throw new BadRequestException('Account not found');
+
+    if (codeId !== foundUser.codeId)
+      throw new BadRequestException('The code invalid or expried!');
+
+    if (!dayjs().isBefore(foundUser.codeExpired))
+      throw new BadRequestException('The code invalid or expried!');
+
+    await foundUser.updateOne({ isActive: true });
+
+    return {};
   }
 }
