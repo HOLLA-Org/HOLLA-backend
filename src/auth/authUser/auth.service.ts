@@ -18,6 +18,9 @@ import { ResendCodeDto } from './dto/resend-code.dto';
 import { generateCode, generateResetCode } from '@/utils';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RedisService } from '@/modules/redis/redis.service';
+import { ROLES } from '@/constant';
+import { User } from '@/modules/users/schemas/user.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -32,10 +35,10 @@ export class AuthService {
 
   async validateUser(account: string, password: string) {
     const user = await this.usersService.findOneByLogin(account);
-    if (!user) return null;
+    if (!user) throw new BadRequestException('user not found!');
 
     const isValidPassword = await comparePassword(password, user.password);
-    if (!isValidPassword) return null;
+    if (!isValidPassword) throw new BadRequestException('Invalid password!');
 
     return user;
   }
@@ -65,7 +68,7 @@ export class AuthService {
     // Validate DTO
     const errors = await validate(refreshTokenDto);
     if (errors.length > 0) {
-      throw new BadRequestException('Invalid refresh token data');
+      throw new BadRequestException('Invalid refresh token data!');
     }
 
     // Save refresh token to MongoDB using TokenService
@@ -83,14 +86,86 @@ export class AuthService {
   }
 
   async handleRegister(registerDto: CreateAuthDto) {
-    return await this.usersService.handleRegister(registerDto);
+    const {
+      username,
+      email,
+      password,
+      confirmPassword,
+      phone,
+      address,
+      image,
+    } = registerDto;
+
+    if (password !== confirmPassword)
+      throw new BadRequestException('Password does not match!');
+
+    if (!this.usersService.isValidPassword(password)) {
+      throw new BadRequestException(
+        'Password must be at least 6 characters long, contain 1 uppercase letter, and 1 special character!',
+      );
+    }
+
+    const isUserExist = await this.usersService.isUserNameExist(username);
+    if (isUserExist) {
+      throw new BadRequestException(
+        'Username already exists! Please use another username',
+      );
+    }
+
+    const isEmailExist = await this.usersService.isEmailExist(email);
+    if (isEmailExist) {
+      throw new BadRequestException(
+        'Email already exists! Please use another email',
+      );
+    }
+
+    const baseUsername = this.usersService.generateUsername(username);
+    let userName = baseUsername;
+    let count = 1;
+
+    while (await this.usersService.isUserNameExist(userName)) {
+      userName = `${baseUsername}${count}`;
+      count++;
+    }
+
+    const hashedPassword = await hashPassword(password);
+    const activationCode = generateCode();
+
+    const user = await this.usersService.createUser({
+      username: userName,
+      email,
+      password: hashedPassword,
+      phone,
+      address,
+      image,
+      isActive: false,
+      role: ROLES.user,
+      codeId: activationCode,
+      codeExpired: dayjs().add(5, 'minutes').toDate(),
+    });
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Activate your HoLLa account',
+      template: 'register',
+      context: {
+        name: user?.username ?? user?.email,
+        activationCode: user.codeId,
+      },
+    });
+
+    return {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    };
   }
 
   async verifyAccount(verifyAccountDto: VerifyAccountDto) {
     const { email, codeId } = verifyAccountDto;
 
     const foundUser = await this.usersService.findByEmail({ email });
-    if (!foundUser) throw new BadRequestException('Account not found');
+    if (!foundUser) throw new BadRequestException('Account not found!');
 
     if (codeId !== foundUser.codeId)
       throw new BadRequestException('The code invalid or expried!');
@@ -104,14 +179,35 @@ export class AuthService {
   }
 
   async resendCode(resendCodeDto: ResendCodeDto) {
-    return this.usersService.resendCode(resendCodeDto);
+    const { email } = resendCodeDto;
+
+    const foundUser = await this.usersService.findByEmail({ email });
+    if (!foundUser) throw new BadRequestException('Account not found');
+
+    foundUser.codeId = generateCode();
+    foundUser.codeExpired = dayjs().add(5, 'minutes').toDate();
+
+    await foundUser.save();
+
+    // Send mail
+    this.mailerService.sendMail({
+      to: foundUser.email, // List to reciver
+      subject: 'Resend code to your account at HoLLa', // Subject line
+      template: 'resend-code',
+      context: {
+        name: foundUser?.username ?? foundUser?.email,
+        activationCode: foundUser.codeId,
+      },
+    });
+
+    return {};
   }
 
   async sendResetPasswordEmail(email: string) {
     const TIME_ONE_HOUR = 3600;
     const foundUser = await this.usersService.findByEmail({ email });
     if (!foundUser)
-      throw new BadRequestException('User with this email does not exist.');
+      throw new BadRequestException('User with this email does not exist!');
 
     const code = generateCode();
     const ttl = TIME_ONE_HOUR; // code expiration time in seconds (1 hour)
@@ -130,16 +226,16 @@ export class AuthService {
       },
     });
 
-    return { message: 'Password reset email sent.' };
+    return { message: 'Otp reset password has been sent to email!' };
   }
 
   async checkValidCode(code: string, email: string) {
     const TIME_ONE_HOUR = 3600;
-    if (!code) throw new BadRequestException('Invalid or expired code.');
+    if (!code) throw new BadRequestException('Invalid or expired code!');
 
     const cachedCode = await this.redisService.get(`reset-password:${email}`);
     if (!cachedCode || cachedCode !== code)
-      throw new BadRequestException('Invalid or expired code.');
+      throw new BadRequestException('Invalid or expired code!');
 
     const token = this.jwtService.sign({ email });
     const ttl = TIME_ONE_HOUR;
@@ -161,7 +257,7 @@ export class AuthService {
       const decoded = this.jwtService.verify(token);
       email = decoded.email;
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired token.');
+      throw new UnauthorizedException('Invalid or expired token!');
     }
 
     // Verify token from Redis
@@ -169,10 +265,10 @@ export class AuthService {
       `reset-password-token:${email}`,
     );
     if (!cachedToken || cachedToken !== token)
-      throw new UnauthorizedException('Invalid or expired token.');
+      throw new UnauthorizedException('Invalid or expired token!');
 
     const user = await this.usersService.findByEmail({ email });
-    if (!user) throw new BadRequestException('User does not exist.');
+    if (!user) throw new BadRequestException('User does not exist!');
 
     user.password = await hashPassword(newPassword);
     await user.save();
@@ -180,6 +276,6 @@ export class AuthService {
     // Remove token from Redis after successful password reset
     await this.redisService.del(`reset-password-token:${email}`);
 
-    return { message: 'Password reset successfully.' };
+    return { message: 'Password reset successfully!' };
   }
 }
