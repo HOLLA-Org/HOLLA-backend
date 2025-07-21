@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { TokenModule } from '@/modules/token/token.module';
 import { LocalStrategy } from './passport/local.strategy';
+import { RedisModule } from '@/modules/redis/redis.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LocalStrategy } from './passport/local.strategy';
       inject: [ConfigService],
     }),
     PassportModule,
+    RedisModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],

@@ -78,4 +78,66 @@ export class AuthController {
   resendCode(@Body() resendCodeDto: ResendCodeDto) {
     return this.authService.resendCode(resendCodeDto);
   }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Forgot Password' })
+  @ApiResponse({ status: 200, description: 'Recovery account successfully' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', format: 'email' },
+      },
+      required: ['email'],
+    },
+  })
+  @ResponseMessage('Recovery account successfully')
+  forgotPassword(@Body('email') email: string) {
+    return this.authService.sendResetPasswordEmail(email);
+  }
+
+  @Public()
+  @Post('check-validcode')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Check Verification Code' })
+  @ApiResponse({ status: 200, description: 'Check valid code successfully' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', format: 'email' },
+        code: { type: 'string' },
+      },
+      required: ['email', 'code'],
+    },
+  })
+  @ResponseMessage('Check valid code successfully')
+  checkValidCode(@Body('email') email: string, @Body('code') code: string) {
+    return this.authService.checkValidCode(code, email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Reset Password' })
+  @ApiResponse({ status: 200, description: 'Reset password successfully' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        newPassword: { type: 'string' },
+        token: { type: 'string' },
+      },
+      required: ['newPassword', 'token'],
+    },
+  })
+  @ResponseMessage('Reset password successfully')
+  resetPassword(
+    @Body('newPassword') newPass: string,
+    @Body('token') token: string,
+  ) {
+    return this.authService.resetPassword(token, newPass);
+  }
 }
