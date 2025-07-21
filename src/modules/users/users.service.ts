@@ -11,15 +11,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import aqp from 'api-query-params';
-import { getInfo } from '@/utils';
+import { generateCode, getInfo } from '@/utils';
 import ObjectId from 'mongoose';
 import { UserType } from '@/auth/authUser/auth';
+import { CreateAuthDto } from '@/auth/authUser/dto/create-auth.dto';
+import { ROLES } from '@/constant';
+import dayjs from 'dayjs';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private configService: ConfigService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async findById(_id: string) {
@@ -191,5 +196,97 @@ export class UsersService {
     }
 
     return hasUser.deleteOne();
+  }
+
+  async handleRegister(registerDto: CreateAuthDto) {
+    const {
+      fullName,
+      email,
+      password,
+      confirmPassword,
+      phoneNumber,
+      address,
+      image,
+    } = registerDto;
+
+    if (password !== confirmPassword)
+      throw new BadRequestException('Password does not match');
+
+    // Validate password manually inside the service
+    if (!this.isValidPassword(password)) {
+      throw new BadRequestException(
+        'Password must be at least 6 characters long, contain 1 uppercase letter, and 1 special character.',
+      );
+    }
+
+    // Check user has exist?
+    const isUserExist = await this.isUserExist(fullName);
+    if (isUserExist) {
+      throw new BadRequestException(
+        `Email ${email} already exists. Please use another email!`,
+      );
+    }
+
+    // Check email has exist?
+    const isEmailExist = await this.isEmailExist(email);
+    if (isEmailExist) {
+      throw new BadRequestException(
+        `Email ${email} already exists. Please use another email!`,
+      );
+    }
+
+    // Generate a unique username
+    const baseUsername = this.generateUsername(fullName);
+    let username = baseUsername;
+    let count = 1;
+
+    while (await this.isUserExist(username)) {
+      username = `${baseUsername}${count}`;
+      count++;
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Generate a 4-digit numeric activation code
+    const activationCode = generateCode(); // Ensures a 4-digit code
+
+    const user = await this.userModel.create({
+      fullName: fullName,
+      username: username,
+      email,
+      phoneNunber: phoneNumber,
+      password: hashedPassword,
+      isActive: false,
+      role: ROLES.user,
+      codeId: activationCode,
+      codeExpired: dayjs().add(10, 'minutes'),
+    });
+
+    // Send mail
+    this.mailerService.sendMail({
+      to: user.email, // List to reciver
+      subject: 'Active your account at HoLLa', // Subject line
+      template: 'register',
+      context: {
+        name: user?.username ?? user?.email,
+        activationCode: user.codeId,
+      },
+    });
+
+    return { _id: user._id, username: user.username };
+  }
+
+  private isValidPassword(password: string): boolean {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+    return passwordRegex.test(password);
+  }
+
+  private generateUsername(fullName: string): string {
+    return fullName
+      .toLowerCase()
+      .replace(/\s+/g, '') // Remove spaces
+      .replace(/[^a-z0-9]/g, '') // Remove special characters
+      .substring(0, 15); // Limit length (optional)
   }
 }

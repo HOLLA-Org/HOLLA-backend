@@ -17,6 +17,7 @@ import {
 import { LocalAuthGuard } from './passport/local-auth.guard';
 import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateAuthDto } from './dto/create-auth.dto';
 
 @ApiTags('Authentication User') // Swagger category
 @Controller('auth')
@@ -33,14 +34,24 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        username: { type: 'string' },
+        account: { type: 'string' },
         password: { type: 'string' },
       },
-      required: ['username', 'password'],
+      required: ['account', 'password'],
     },
   })
   @ResponseMessage('Login successfully')
   async handleLogin(@Request() req: RequestWithUser) {
     return this.authService.login(req.user);
+  }
+
+  @Public()
+  @Post('register')
+  @ApiOperation({ summary: 'User Registration' })
+  @ApiResponse({ status: 201, description: 'Register successfully' })
+  @ApiBody({ type: CreateAuthDto })
+  @ResponseMessage('Register successfully')
+  register(@Body() registerDto: CreateAuthDto) {
+    return this.authService.handleRegister(registerDto);
   }
 }
