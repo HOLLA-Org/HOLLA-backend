@@ -10,6 +10,7 @@ import { comparePassword } from '@/helpers';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import dayjs from 'dayjs';
+import { ResendCodeDto } from './dto/resend-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -77,9 +78,9 @@ export class AuthService {
   }
 
   async verifyAccount(verifyAccountDto: VerifyAccountDto) {
-    const { account, codeId } = verifyAccountDto;
+    const { email, codeId } = verifyAccountDto;
 
-    const foundUser = await this.usersService.findOneByLogin(account);
+    const foundUser = await this.usersService.findByEmail({ email });
     if (!foundUser) throw new BadRequestException('Account not found');
 
     if (codeId !== foundUser.codeId)
@@ -91,5 +92,9 @@ export class AuthService {
     await foundUser.updateOne({ isActive: true });
 
     return {};
+  }
+
+  async resendCode(resendCodeDto: ResendCodeDto) {
+    return this.usersService.resendCode(resendCodeDto);
   }
 }

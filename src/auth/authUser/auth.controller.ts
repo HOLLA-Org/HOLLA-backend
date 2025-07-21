@@ -19,6 +19,7 @@ import { RequestWithUser } from '@/common/interfaces/request-with-user.interface
 import { ApiTags } from '@nestjs/swagger';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
+import { ResendCodeDto } from './dto/resend-code.dto';
 
 @ApiTags('Authentication User') // Swagger category
 @Controller('auth')
@@ -65,5 +66,16 @@ export class AuthController {
   @ResponseMessage('Verify account successfully')
   verify(@Body() verifyDto: VerifyAccountDto) {
     return this.authService.verifyAccount(verifyDto);
+  }
+
+  @Public()
+  @Post('resend-code')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Resend Verification Code' })
+  @ApiResponse({ status: 200, description: 'Resend code successfully' })
+  @ApiBody({ type: ResendCodeDto })
+  @ResponseMessage('Resend code successfully')
+  resendCode(@Body() resendCodeDto: ResendCodeDto) {
+    return this.authService.resendCode(resendCodeDto);
   }
 }
