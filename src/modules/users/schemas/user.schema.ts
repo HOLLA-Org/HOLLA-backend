@@ -13,13 +13,13 @@ export class User {
   @Prop()
   password: string;
 
-  @Prop()
+  @Prop({ default: '' })
   phone: string;
 
-  @Prop()
+  @Prop({ default: '' })
   address: string;
 
-  @Prop()
+  @Prop({ default: '' })
   image: string;
 
   @Prop({ type: String, enum: ROLES, default: ROLES.user })
