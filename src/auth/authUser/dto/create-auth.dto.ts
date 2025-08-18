@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsEmail,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
@@ -63,4 +65,21 @@ export class CreateAuthDto {
   })
   @IsOptional()
   image?: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'male',
+    description: 'Gender of the user (optional)',
+    enum: ['male', 'female', 'other'],
+  })
+  @IsOptional()
+  gender?: string;
+
+  @ApiProperty({
+    required: false,
+    example: '2000-01-01',
+    description: 'Date of birth in ISO format (optional)',
+  })
+  @IsOptional()
+  date_of_birth?: Date;
 }

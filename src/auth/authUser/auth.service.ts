@@ -94,6 +94,8 @@ export class AuthService {
       phone,
       address,
       image,
+      gender,
+      date_of_birth,
     } = registerDto;
 
     if (password !== confirmPassword)
@@ -138,6 +140,8 @@ export class AuthService {
       phone,
       address,
       image,
+      gender,
+      date_of_birth,
       isActive: false,
       role: ROLES.user,
       codeId: activationCode,

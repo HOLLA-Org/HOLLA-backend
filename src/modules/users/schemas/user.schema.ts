@@ -22,6 +22,12 @@ export class User {
   @Prop({ default: '' })
   image: string;
 
+  @Prop({ enum: ['male', 'female', 'other', ''], default: '' })
+  gender: string;
+
+  @Prop({ default: null })
+  date_of_birth: Date;
+
   @Prop({ type: String, enum: ROLES, default: ROLES.user })
   role: string;
 
