@@ -10,6 +10,7 @@ import { AuthModule } from './auth/authUser/auth.module';
 import { JwtAuthGuard } from './auth/authUser/passport/jwt-auth.guard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { HotelModule } from './modules/hotel/hotel.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -51,6 +52,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       }),
       inject: [ConfigService],
     }),
+    HotelModule,
   ],
   controllers: [AppController],
   providers: [
