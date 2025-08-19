@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 
 export class CreateHotelDto {
   @ApiProperty({
@@ -32,13 +32,15 @@ export class CreateHotelDto {
   @IsNumber()
   rating?: number;
 
-  @ApiPropertyOptional({
-    description: 'Hotel images (comma-separated URLs or a single URL)',
-    example: 'https://example.com/image1.jpg',
+  @ApiProperty({
+    description: 'List of image URLs for the room',
+    example: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
+    required: false,
   })
+  @IsArray()
+  @IsString({ each: true })
   @IsOptional()
-  @IsString()
-  images?: string;
+  images?: string[];
 
   @ApiPropertyOptional({
     description: 'Number of rating submissions',
