@@ -91,7 +91,17 @@ export class HotelService {
     return result;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} hotel`;
+  async remove(_id: string) {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
+
+    const hasHotel = await this.hotelModel.findById(_id);
+
+    if (!hasHotel) {
+      throw new BadRequestException('Hotel not found!');
+    }
+
+    return hasHotel.deleteOne();
   }
 }
