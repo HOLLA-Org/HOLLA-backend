@@ -47,6 +47,10 @@ export class HotelService {
       .limit(10);
   }
 
+  async getNewHotels() {
+    return this.hotelModel.find().sort({ createdAt: -1 }).limit(10);
+  }
+
   async findOneByName({ name }: { name: string }) {
     return await this.hotelModel.findOne({ name });
   }
