@@ -2,9 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { Room, RoomDocument } from './schemas/room.schema';
 import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
+import { getInfo } from '@/utils';
 
 @Injectable()
 export class RoomService {
@@ -38,16 +39,44 @@ export class RoomService {
     return rooms;
   }
 
-  findAll() {
-    return `This action returns all room`;
-  }
+  async updateRoom(_id: string, updateRoomDto: UpdateRoomDto): Promise<Room> {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} room`;
-  }
+    const {
+      name,
+      type,
+      price_per_hour,
+      price_overnight,
+      price_per_day,
+      is_available,
+      images,
+    } = updateRoomDto;
 
-  update(id: number, updateRoomDto: UpdateRoomDto) {
-    return `This action updates a #${id} room`;
+    const filter = { _id };
+    const update = {
+      name,
+      type,
+      price_per_hour,
+      price_overnight,
+      price_per_day,
+      is_available,
+      images,
+    };
+    const options = { new: true };
+
+    const result = await this.roomModel.findOneAndUpdate(
+      filter,
+      update,
+      options,
+    );
+
+    if (!result) {
+      throw new BadRequestException(`Room id "${_id}" not found!`);
+    }
+
+    return result;
   }
 
   remove(id: number) {

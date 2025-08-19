@@ -22,10 +22,10 @@ export class RoomController {
   @Post()
   // @Roles(Role.Admin)
   @Public()
-  @ApiOperation({ summary: 'Create a new Room' })
+  @ApiOperation({ summary: 'Create a new room' })
   @ApiResponse({ status: 201, description: 'Room created successfully' })
   @ApiBody({ type: CreateRoomDto })
-  @ResponseMessage('Create new Room successfully')
+  @ResponseMessage('Create new room successfully')
   async createRoom(@Body() createRoomDto: CreateRoomDto) {
     return this.roomService.createRoom(createRoomDto);
   }
@@ -35,23 +35,20 @@ export class RoomController {
   @ApiOperation({ summary: 'Get all rooms for a specific hotel' })
   @ApiResponse({ status: 200, description: 'List of rooms for the hotel.' })
   @ApiResponse({ status: 404, description: 'Hotel not found.' })
+  @ResponseMessage('Get all rooms for a specific hotel')
   async getAllByHotelId(@Param('hotel_id') hotel_id: string) {
     return this.roomService.getAllByHotelId(hotel_id);
   }
 
-  @Get()
-  findAll() {
-    return this.roomService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roomService.findOne(+id);
-  }
-
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
-    return this.roomService.update(+id, updateRoomDto);
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: 'Update room by id' })
+  @ApiResponse({ status: 200, description: 'Room updated successfully' })
+  @ResponseMessage('Update room successfully')
+  @ApiBody({ type: UpdateRoomDto })
+  async update(@Param('id') _id: string, @Body() updateRoomDto: UpdateRoomDto) {
+    return this.roomService.updateRoom(_id, updateRoomDto);
   }
 
   @Delete(':id')
