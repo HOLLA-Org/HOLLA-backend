@@ -81,6 +81,18 @@ export class HotelController {
     return this.hotelService.getTopRatedHotels();
   }
 
+  @Get('new')
+  @Public()
+  @ApiOperation({
+    summary: 'Get newly added hotels (sorted by createdAt desc)',
+  })
+  @ApiResponse({ status: 200, description: 'List of new hotels' })
+  @ApiResponse({ status: 404, description: 'No new hotels found' })
+  @ResponseMessage('New hotels fetched successfully')
+  async getNew() {
+    return this.hotelService.getNewHotels();
+  }
+
   @Get(':name')
   @Public()
   @ApiOperation({ summary: 'Find a hotel by username' })
