@@ -48,4 +48,15 @@ export class HotelController {
   async getAllHotels() {
     return this.hotelService.getAllHotels();
   }
+
+  @Get(':name')
+  @Public()
+  @ApiOperation({ summary: 'Find a hotel by username' })
+  @ApiResponse({ status: 200, description: 'Get hotel info by username' })
+  @ApiResponse({ status: 404, description: 'No hotel found' })
+  @ApiParam({ name: 'name', description: 'Name of the hotel' })
+  @ResponseMessage('Get hotel info by username')
+  async findByName(@Param('name') name: string) {
+    return this.hotelService.findOneByName({ name });
+  }
 }
