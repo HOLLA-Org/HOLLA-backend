@@ -11,7 +11,13 @@ import { RoomService } from './room.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { Public, ResponseMessage } from '@/decorator/customize';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Rooms')
 // @ApiBearerAuth()
@@ -52,7 +58,15 @@ export class RoomController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.roomService.remove(+id);
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: 'Delete a room by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The room has been successfully deleted.',
+  })
+  @ResponseMessage('Delete room successfully')
+  remove(@Param('id') _id: string) {
+    return this.roomService.remove(_id);
   }
 }
