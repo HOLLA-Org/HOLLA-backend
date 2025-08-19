@@ -39,6 +39,14 @@ export class HotelService {
       { $sample: { size: 10 } },
     ]);
   }
+
+  async getTopRatedHotels() {
+    return this.hotelModel
+      .find()
+      .sort({ rating_count: -1, rating: -1 })
+      .limit(10);
+  }
+
   async findOneByName({ name }: { name: string }) {
     return await this.hotelModel.findOne({ name });
   }

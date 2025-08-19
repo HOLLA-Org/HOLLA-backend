@@ -69,6 +69,18 @@ export class HotelController {
     return this.hotelService.getRecommendedHotels();
   }
 
+  @Get('top-rated')
+  @Public()
+  @ApiOperation({
+    summary: 'Get top-rated hotels sorted by rating/rating_count',
+  })
+  @ApiResponse({ status: 200, description: 'List of top-rated hotels' })
+  @ApiResponse({ status: 404, description: 'No top-rated hotels found' })
+  @ResponseMessage('Top-rated hotels fetched successfully')
+  async getTopRated() {
+    return this.hotelService.getTopRatedHotels();
+  }
+
   @Get(':name')
   @Public()
   @ApiOperation({ summary: 'Find a hotel by username' })
