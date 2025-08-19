@@ -28,6 +28,16 @@ export class RoomService {
     return newRoom.save();
   }
 
+  async getAllByHotelId(hotel_id: string): Promise<Room[]> {
+    const hotel = await this.hotelModel.findById(hotel_id);
+    if (!hotel) {
+      throw new BadRequestException(`Hotel with ID "${hotel_id}" not found`);
+    }
+
+    const rooms = await this.roomModel.find({ hotel_id });
+    return rooms;
+  }
+
   findAll() {
     return `This action returns all room`;
   }
