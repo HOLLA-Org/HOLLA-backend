@@ -21,7 +21,7 @@ export class RoomService {
       throw new BadRequestException(`Not found hotel with id ${hotel_id}`);
     }
 
-    const existingRoom = await this.roomModel.findOne({ name });
+    const existingRoom = await this.roomModel.findOne({ name, hotel_id });
     if (existingRoom) {
       throw new BadRequestException(`Room with name '${name}' already exists`);
     }
