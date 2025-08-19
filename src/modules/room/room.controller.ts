@@ -30,6 +30,15 @@ export class RoomController {
     return this.roomService.createRoom(createRoomDto);
   }
 
+  @Get(':hotel_id')
+  @Public()
+  @ApiOperation({ summary: 'Get all rooms for a specific hotel' })
+  @ApiResponse({ status: 200, description: 'List of rooms for the hotel.' })
+  @ApiResponse({ status: 404, description: 'Hotel not found.' })
+  async getAllByHotelId(@Param('hotel_id') hotel_id: string) {
+    return this.roomService.getAllByHotelId(hotel_id);
+  }
+
   @Get()
   findAll() {
     return this.roomService.findAll();
