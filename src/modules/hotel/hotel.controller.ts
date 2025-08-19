@@ -117,4 +117,17 @@ export class HotelController {
   ) {
     return this.hotelService.updateHotel(_id, updateHotelDto);
   }
+
+  @Delete(':id')
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: 'Delete a hotel by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The hotel has been successfully deleted.',
+  })
+  @ResponseMessage('Delete hotel successfully')
+  remove(@Param('id') _id: string) {
+    return this.hotelService.remove(_id);
+  }
 }
