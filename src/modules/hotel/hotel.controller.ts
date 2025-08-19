@@ -24,7 +24,7 @@ import {
 
 @ApiTags('Hotels')
 // @ApiBearerAuth()
-@Controller('hotels')
+@Controller('hotel')
 export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
@@ -37,5 +37,15 @@ export class HotelController {
   @ResponseMessage('Create new hotel successfully')
   async createHotel(@Body() createHotelDto: CreateHotelDto) {
     return this.hotelService.create(createHotelDto);
+  }
+
+  @Get()
+  @Public()
+  @ApiOperation({ summary: 'Get all hotels' })
+  @ApiResponse({ status: 200, description: 'Get all hotels successfully' })
+  @ApiResponse({ status: 404, description: 'No hotels found' })
+  @ResponseMessage('Get all hotels successfully')
+  async getAllHotels() {
+    return this.hotelService.getAllHotels();
   }
 }
