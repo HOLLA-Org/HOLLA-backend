@@ -22,8 +22,8 @@ export class HotelService {
     return newHotel.save();
   }
 
-  findAll() {
-    return `This action returns all hotel`;
+  async getAllHotels() {
+    return await this.hotelModel.find();
   }
 
   findOne(id: number) {
