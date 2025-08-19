@@ -103,4 +103,18 @@ export class HotelController {
   async findByName(@Param('name') name: string) {
     return this.hotelService.findOneByName({ name });
   }
+
+  @Patch(':id')
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: 'Update hotel by id' })
+  @ApiResponse({ status: 200, description: 'HOtel updated successfully' })
+  @ResponseMessage('Update hotel successfully')
+  @ApiBody({ type: UpdateHotelDto })
+  async update(
+    @Param('id') _id: string,
+    @Body() updateHotelDto: UpdateHotelDto,
+  ) {
+    return this.hotelService.updateHotel(_id, updateHotelDto);
+  }
 }

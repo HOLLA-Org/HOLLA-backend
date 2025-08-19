@@ -4,6 +4,7 @@ import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Hotel, HotelDocument } from './schemas/hotel.schema';
 import { Model } from 'mongoose';
+import { isValidObjectId } from '@/utils';
 
 @Injectable()
 export class HotelService {
@@ -55,8 +56,39 @@ export class HotelService {
     return await this.hotelModel.findOne({ name });
   }
 
-  update(id: number, updateHotelDto: UpdateHotelDto) {
-    return `This action updates a #${id} hotel`;
+  async updateHotel(
+    _id: string,
+    updateHotelDto: UpdateHotelDto,
+  ): Promise<Hotel> {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
+
+    const { name, address, description, rating, images, rating_count } =
+      updateHotelDto;
+
+    const filter = { _id };
+    const update = {
+      name,
+      address,
+      description,
+      rating,
+      images,
+      rating_count,
+    };
+    const options = { new: true };
+
+    const result = await this.hotelModel.findOneAndUpdate(
+      filter,
+      update,
+      options,
+    );
+
+    if (!result) {
+      throw new BadRequestException(`Hotel id "${_id}" not found!`);
+    }
+
+    return result;
   }
 
   remove(id: number) {
