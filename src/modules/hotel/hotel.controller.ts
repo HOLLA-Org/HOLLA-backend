@@ -49,6 +49,16 @@ export class HotelController {
     return this.hotelService.getAllHotels();
   }
 
+  @Get('popular')
+  @Public()
+  @ApiOperation({ summary: 'Get popular hotels (high rating + many reviews)' })
+  @ApiResponse({ status: 200, description: 'List of popular hotels' })
+  @ApiResponse({ status: 404, description: 'No popular hotels found' })
+  @ResponseMessage('Popular hotels fetched successfully')
+  async getPopular() {
+    return this.hotelService.getPopularHotels();
+  }
+
   @Get(':name')
   @Public()
   @ApiOperation({ summary: 'Find a hotel by username' })

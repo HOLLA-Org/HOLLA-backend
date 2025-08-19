@@ -26,12 +26,14 @@ export class HotelService {
     return await this.hotelModel.find();
   }
 
+  async getPopularHotels() {
+    return this.hotelModel
+      .find()
+      .sort({ rating: -1, rating_count: -1 })
+      .limit(10);
+  }
   async findOneByName({ name }: { name: string }) {
     return await this.hotelModel.findOne({ name });
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} hotel`;
   }
 
   update(id: number, updateHotelDto: UpdateHotelDto) {
