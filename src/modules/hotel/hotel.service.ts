@@ -26,6 +26,10 @@ export class HotelService {
     return await this.hotelModel.find();
   }
 
+  async findOneByName({ name }: { name: string }) {
+    return await this.hotelModel.findOne({ name });
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} hotel`;
   }
