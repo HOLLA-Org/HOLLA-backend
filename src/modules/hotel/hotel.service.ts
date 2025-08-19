@@ -32,6 +32,13 @@ export class HotelService {
       .sort({ rating: -1, rating_count: -1 })
       .limit(10);
   }
+
+  async getRecommendedHotels() {
+    return this.hotelModel.aggregate([
+      { $match: { rating: { $gte: 4 } } },
+      { $sample: { size: 10 } },
+    ]);
+  }
   async findOneByName({ name }: { name: string }) {
     return await this.hotelModel.findOne({ name });
   }
