@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './auth/authUser/passport/jwt-auth.guard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { HotelModule } from './modules/hotel/hotel.module';
+import { RoomModule } from './modules/room/room.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -53,6 +54,7 @@ import { HotelModule } from './modules/hotel/hotel.module';
       inject: [ConfigService],
     }),
     HotelModule,
+    RoomModule,
   ],
   controllers: [AppController],
   providers: [
