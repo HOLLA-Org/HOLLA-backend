@@ -79,7 +79,17 @@ export class RoomService {
     return result;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} room`;
+  async remove(_id: string) {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
+
+    const hasRoom = await this.roomModel.findById(_id);
+
+    if (!hasRoom) {
+      throw new BadRequestException('Room not found!');
+    }
+
+    return hasRoom.deleteOne();
   }
 }
