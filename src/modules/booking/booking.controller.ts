@@ -32,32 +32,33 @@ export class BookingController {
   @Public()
   @ApiOperation({ summary: '[Admin] Confirm a pending booking' })
   @ApiResponse({ status: 200, description: 'Booking confirmed successfully.' })
-  @ApiResponse({ status: 404, description: 'Booking not found.' })
-  @ApiResponse({
-    status: 400,
-    description: 'Booking is not in a pending state.',
-  })
+  @ResponseMessage('Booking confirmed successfully.')
   confirm(@Param('id') _id: string) {
     return this.bookingService.confirmBooking(_id);
   }
 
   @Get()
-  findAll() {
-    return this.bookingService.findAll();
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Get all bookings' })
+  @ApiResponse({ status: 200, description: 'Bookings retrieved successfully.' })
+  @ResponseMessage('Bookings retrieved successfully.')
+  getAll() {
+    return this.bookingService.getAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookingService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.bookingService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
-    return this.bookingService.update(+id, updateBookingDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
+  //   return this.bookingService.update(+id, updateBookingDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bookingService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.bookingService.remove(+id);
+  // }
 }
