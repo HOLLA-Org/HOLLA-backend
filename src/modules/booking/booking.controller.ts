@@ -26,6 +26,21 @@ export class BookingController {
   create(@Body() createBookingDto: CreateBookingDto) {
     return this.bookingService.create(createBookingDto);
   }
+
+  @Patch('confirm/:id')
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Confirm a pending booking' })
+  @ApiResponse({ status: 200, description: 'Booking confirmed successfully.' })
+  @ApiResponse({ status: 404, description: 'Booking not found.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking is not in a pending state.',
+  })
+  confirm(@Param('id') _id: string) {
+    return this.bookingService.confirmBooking(_id);
+  }
+
   @Get()
   findAll() {
     return this.bookingService.findAll();
