@@ -13,6 +13,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from './modules/room/room.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -23,6 +24,7 @@ import { BookingModule } from './modules/booking/booking.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     AuthModule,
     MailerModule.forRootAsync({
@@ -54,6 +56,7 @@ import { BookingModule } from './modules/booking/booking.module';
       }),
       inject: [ConfigService],
     }),
+
     HotelModule,
     RoomModule,
     BookingModule,
