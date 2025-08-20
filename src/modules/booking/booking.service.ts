@@ -72,8 +72,12 @@ export class BookingService {
     return booking;
   }
 
-  findAll() {
-    return `This action returns all booking`;
+  async getAll(): Promise<Booking[]> {
+    return this.bookingModel
+      .find()
+      .sort({ booked_at: -1 })
+      .populate('user_id', 'username email')
+      .populate('room_id', 'name type');
   }
 
   findOne(id: number) {
