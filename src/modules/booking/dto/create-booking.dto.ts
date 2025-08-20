@@ -14,14 +14,6 @@ import {
 
 export class CreateBookingDto {
   @ApiProperty({
-    description: 'ID of the user who is booking',
-    example: '64d3b1f9c3b4e5f6a7b8c9d0',
-  })
-  @IsNotEmpty()
-  @IsMongoId()
-  user_id: string;
-
-  @ApiProperty({
     description: 'ID of the room being booked',
     example: '64d3b1f9c3b4e5f6a7b8c9d0',
   })
