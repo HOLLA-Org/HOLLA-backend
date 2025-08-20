@@ -7,6 +7,7 @@ import { BookingStatus } from '@/constant';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Room, RoomDocument } from '../room/schemas/room.schema';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class BookingService {
@@ -92,15 +93,17 @@ export class BookingService {
       .populate('room_id');
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} booking`;
-  }
+  @Cron(CronExpression.EVERY_HOUR)
+  async changeStatusBookings() {
+    const findConditions = {
+      status: BookingStatus.ACTIVE,
+      check_out: { $lte: new Date() },
+    };
 
-  update(id: number, updateBookingDto: UpdateBookingDto) {
-    return `This action updates a #${id} booking`;
-  }
+    const updateData = {
+      status: BookingStatus.COMPLETED,
+    };
 
-  remove(id: number) {
-    return `This action removes a #${id} booking`;
+    return await this.bookingModel.updateMany(findConditions, updateData);
   }
 }
