@@ -69,10 +69,24 @@ export class DiscountController {
   //   return this.discountService.update(+id, updateDiscountDto);
   // }
 
+  @Patch(':id')
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Update discount by id' })
+  @ApiResponse({ status: 200, description: 'Discount updated successfully' })
+  @ResponseMessage('Update discount successfully')
+  @ApiBody({ type: UpdateDiscountDto })
+  async update(
+    @Param('id') _id: string,
+    @Body() updateDiscountDto: UpdateDiscountDto,
+  ) {
+    return this.discountService.update(_id, updateDiscountDto);
+  }
+
   @Delete(':id')
   // @Roles(Role.Admin)
   @Public()
-  @ApiOperation({ summary: '[Admin] Delete a discount by ID' })
+  @ApiOperation({ summary: '[Admin] Delete a discount by id' })
   @ApiResponse({
     status: 200,
     description: 'The discount has been successfully deleted.',

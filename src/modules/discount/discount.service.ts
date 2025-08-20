@@ -81,6 +81,40 @@ export class DiscountService {
     return await this.discountModel.deleteMany(findConditions);
   }
 
+  async update(
+    _id: string,
+    updateDiscountDto: UpdateDiscountDto,
+  ): Promise<Discount> {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
+
+    const { code, value, description, max_usage, expires_at } =
+      updateDiscountDto;
+
+    const filter = { _id };
+    const update = {
+      code,
+      value,
+      description,
+      max_usage,
+      expires_at,
+    };
+    const options = { new: true };
+
+    const result = await this.discountModel.findOneAndUpdate(
+      filter,
+      update,
+      options,
+    );
+
+    if (!result) {
+      throw new BadRequestException(`Discount id "${_id}" not found!`);
+    }
+
+    return result;
+  }
+
   async remove(_id: string) {
     if (!isValidObjectId(_id)) {
       throw new BadRequestException(`ID "${_id}" is not valid!`);
