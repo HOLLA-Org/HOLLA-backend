@@ -14,6 +14,8 @@ import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from './modules/room/room.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PaymentModule } from './modules/payment/payment.module';
+import { DiscountModule } from './modules/discount/discount.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -60,6 +62,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     HotelModule,
     RoomModule,
     BookingModule,
+    PaymentModule,
+    DiscountModule,
   ],
   controllers: [AppController],
   providers: [
