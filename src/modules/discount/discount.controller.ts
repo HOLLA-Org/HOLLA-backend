@@ -86,7 +86,7 @@ export class DiscountController {
   @Delete(':id')
   // @Roles(Role.Admin)
   @Public()
-  @ApiOperation({ summary: '[Admin] Delete a discount by ID' })
+  @ApiOperation({ summary: '[Admin] Delete a discount by id' })
   @ApiResponse({
     status: 200,
     description: 'The discount has been successfully deleted.',

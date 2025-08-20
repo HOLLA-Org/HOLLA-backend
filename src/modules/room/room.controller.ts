@@ -49,7 +49,7 @@ export class RoomController {
   @Patch(':id')
   // @Roles(Role.Admin)
   @Public()
-  @ApiOperation({ summary: 'Update room by id' })
+  @ApiOperation({ summary: '[Admin] Update room by id' })
   @ApiResponse({ status: 200, description: 'Room updated successfully' })
   @ResponseMessage('Update room successfully')
   @ApiBody({ type: UpdateRoomDto })
@@ -60,7 +60,7 @@ export class RoomController {
   @Delete(':id')
   // @Roles(Role.Admin)
   @Public()
-  @ApiOperation({ summary: 'Delete a room by ID' })
+  @ApiOperation({ summary: '[Admin] Delete a room by id' })
   @ApiResponse({
     status: 200,
     description: 'The room has been successfully deleted.',
