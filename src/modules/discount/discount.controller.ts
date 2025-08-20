@@ -54,19 +54,12 @@ export class DiscountController {
   }
 
   @Get()
-  // @Roles(Role.Admin)
-  @Public()
-  @ApiOperation({ summary: '[Admin] Get all discounts' })
+  @ApiOperation({ summary: 'Get all discounts' })
   @ApiResponse({ status: 200, description: 'List of all discounts' })
   @ResponseMessage('List of all discounts')
   async getAll() {
     return this.discountService.getAll();
   }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.discountService.findOne(+id);
-  // }
 
   // @Patch(':id')
   // update(
@@ -76,8 +69,16 @@ export class DiscountController {
   //   return this.discountService.update(+id, updateDiscountDto);
   // }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.discountService.remove(+id);
-  // }
+  @Delete(':id')
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Delete a discount by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The discount has been successfully deleted.',
+  })
+  @ResponseMessage('Delete discount successfully')
+  remove(@Param('id') _id: string) {
+    return this.discountService.remove(_id);
+  }
 }

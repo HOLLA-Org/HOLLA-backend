@@ -2,9 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateDiscountDto } from './dto/create-discount.dto';
 import { UpdateDiscountDto } from './dto/update-discount.dto';
 import { Discount, DiscountDocument } from './schemas/discount.schema';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../users/schemas/user.schema';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class DiscountService {
@@ -18,7 +19,7 @@ export class DiscountService {
       code: createDiscountDto.code,
     });
     if (discount) {
-      throw new Error('Discount already exists');
+      throw new BadRequestException('Discount already exists');
     }
     const newDiscount = new this.discountModel(createDiscountDto);
     return newDiscount.save();
@@ -71,11 +72,26 @@ export class DiscountService {
     return this.discountModel.find();
   }
 
-  update(id: number, updateDiscountDto: UpdateDiscountDto) {
-    return `This action updates a #${id} discount`;
+  @Cron(CronExpression.EVERY_HOUR)
+  async removeExpiredDiscounts() {
+    const findConditions = {
+      expires_at: { $lte: new Date() },
+    };
+
+    return await this.discountModel.deleteMany(findConditions);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} discount`;
+  async remove(_id: string) {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
+
+    const hasDiscount = await this.discountModel.findById(_id);
+
+    if (!hasDiscount) {
+      throw new BadRequestException('Discount not found!');
+    }
+
+    return hasDiscount.deleteOne();
   }
 }
