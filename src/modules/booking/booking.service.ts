@@ -20,7 +20,7 @@ export class BookingService {
 
     const existingUser = await this.userModel.findById(user_id);
     if (!existingUser) {
-      throw new BadRequestException(`Not found room with id ${user_id}`);
+      throw new BadRequestException(`Not found user with id ${user_id}`);
     }
 
     const existingRoom = await this.roomModel.findById(room_id);
@@ -48,6 +48,30 @@ export class BookingService {
     const newBooking = new this.bookingModel(createBookingDto);
     return newBooking.save();
   }
+
+  async confirmBooking(_id: string): Promise<Booking> {
+    const booking = await this.bookingModel.findById(_id);
+    if (!booking) {
+      throw new BadRequestException(`Not found booking with id ${_id}`);
+    }
+
+    if (booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestException(
+        `Booking is not in a pending state. Current status: ${booking.status}`,
+      );
+    }
+
+    booking.status = BookingStatus.ACTIVE;
+    await booking.save();
+
+    if (booking.room_id) {
+      await this.roomModel.findByIdAndUpdate(booking.room_id, {
+        is_available: false,
+      });
+    }
+    return booking;
+  }
+
   findAll() {
     return `This action returns all booking`;
   }
