@@ -80,6 +80,18 @@ export class BookingService {
       .populate('room_id', 'name type');
   }
 
+  async getAllByStatus(
+    user_id: string,
+    status: BookingStatus,
+  ): Promise<Booking[]> {
+    return this.bookingModel
+      .find({
+        user_id: user_id,
+        status: status,
+      })
+      .populate('room_id');
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} booking`;
   }

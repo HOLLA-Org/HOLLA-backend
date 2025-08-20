@@ -12,6 +12,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ResponseMessage, Public } from '@/decorator/customize';
+import { BookingStatus } from '@/constant';
 @ApiTags('Bookings')
 // @ApiBearerAuth()
 @Controller('bookings')
@@ -45,6 +46,20 @@ export class BookingController {
   @ResponseMessage('Bookings retrieved successfully.')
   getAll() {
     return this.bookingService.getAll();
+  }
+
+  @Get('user/:user_id/status/:status')
+  @Public()
+  @ApiOperation({ summary: 'Get all bookings by status' })
+  @ApiResponse({
+    status: 200,
+    description: "Return a user's bookings filtered by status.",
+  })
+  getAllByStatus(
+    @Param('user_id') user_id: string,
+    @Param('status') status: BookingStatus,
+  ) {
+    return this.bookingService.getAllByStatus(user_id, status);
   }
 
   // @Get(':id')
