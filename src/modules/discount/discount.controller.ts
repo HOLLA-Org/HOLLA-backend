@@ -53,10 +53,15 @@ export class DiscountController {
     return this.discountService.applyDiscount(code, user_id);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.discountService.findAll();
-  // }
+  @Get()
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Get all discounts' })
+  @ApiResponse({ status: 200, description: 'List of all discounts' })
+  @ResponseMessage('List of all discounts')
+  async getAll() {
+    return this.discountService.getAll();
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {

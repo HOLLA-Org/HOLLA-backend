@@ -67,9 +67,8 @@ export class DiscountService {
 
     return { value: discount.value };
   }
-
-  findOne(id: number) {
-    return `This action returns a #${id} discount`;
+  async getAll(): Promise<Discount[]> {
+    return this.discountModel.find();
   }
 
   update(id: number, updateDiscountDto: UpdateDiscountDto) {
