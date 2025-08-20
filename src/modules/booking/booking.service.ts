@@ -16,8 +16,12 @@ export class BookingService {
     @InjectModel(Room.name) private roomModel: Model<RoomDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
-  async create(createBookingDto: CreateBookingDto): Promise<Booking> {
-    const { user_id, room_id, check_in, check_out } = createBookingDto;
+  async create(payload: {
+    createBookingDto: CreateBookingDto;
+    user_id: string;
+  }): Promise<Booking> {
+    const { createBookingDto, user_id } = payload;
+    const { room_id, check_in, check_out } = createBookingDto;
 
     const existingUser = await this.userModel.findById(user_id);
     if (!existingUser) {
@@ -46,7 +50,12 @@ export class BookingService {
       );
     }
 
-    const newBooking = new this.bookingModel(createBookingDto);
+    const newBooking = new this.bookingModel({
+      user_id,
+      ...createBookingDto,
+      status: BookingStatus.PENDING,
+    });
+
     return newBooking.save();
   }
 
@@ -105,5 +114,28 @@ export class BookingService {
     };
 
     return await this.bookingModel.updateMany(findConditions, updateData);
+  }
+
+  async cancelBooking(_id: string, user_id: string): Promise<Booking> {
+    const booking = await this.bookingModel.findById(_id);
+    if (!booking) {
+      throw new BadRequestException(`Not found booking with id ${_id}`);
+    }
+
+    const existingUser = await this.userModel.findById(user_id);
+    if (!existingUser) {
+      throw new BadRequestException(`Not found user with id ${user_id}`);
+    }
+
+    if (
+      ![BookingStatus.PENDING, BookingStatus.ACTIVE].includes(booking.status)
+    ) {
+      throw new BadRequestException(
+        `Cannot cancel a booking with status "${booking.status}"`,
+      );
+    }
+
+    booking.status = BookingStatus.CANCELLED;
+    return booking.save();
   }
 }

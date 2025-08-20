@@ -6,26 +6,32 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ResponseMessage, Public } from '@/decorator/customize';
 import { BookingStatus } from '@/constant';
 @ApiTags('Bookings')
-// @ApiBearerAuth()
+@ApiBearerAuth()
 @Controller('bookings')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
   @Post()
-  @Public()
   @ApiOperation({ summary: 'Create a new booking' })
   @ApiResponse({ status: 201, description: 'Booking created successfully.' })
   @ResponseMessage('Booking created successfully.')
-  create(@Body() createBookingDto: CreateBookingDto) {
-    return this.bookingService.create(createBookingDto);
+  create(@Body() createBookingDto: CreateBookingDto, @Req() req) {
+    const user_id = req.user._id;
+    return this.bookingService.create({ user_id, createBookingDto });
   }
 
   @Patch('confirm/:id')
@@ -49,31 +55,22 @@ export class BookingController {
   }
 
   @Get('user/:user_id/status/:status')
-  @Public()
   @ApiOperation({ summary: 'Get all bookings by status' })
   @ApiResponse({
     status: 200,
     description: "Return a user's bookings filtered by status.",
   })
-  getAllByStatus(
-    @Param('user_id') user_id: string,
-    @Param('status') status: BookingStatus,
-  ) {
+  getAllByStatus(@Req() req, @Param('status') status: BookingStatus) {
+    const user_id = req.user._id;
     return this.bookingService.getAllByStatus(user_id, status);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.bookingService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
-  //   return this.bookingService.update(+id, updateBookingDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.bookingService.remove(+id);
-  // }
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'User cancels their own booking' })
+  @ApiResponse({ status: 200, description: 'Booking cancelled successfully.' })
+  @ResponseMessage('Booking cancelled successfully.')
+  cancel(@Param('id') _id: string, @Req() req) {
+    const user_id = req.user._id;
+    return this.bookingService.cancelBooking(_id, user_id);
+  }
 }
