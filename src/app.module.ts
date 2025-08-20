@@ -12,6 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from './modules/room/room.module';
+import { BookingModule } from './modules/booking/booking.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -55,6 +56,7 @@ import { RoomModule } from './modules/room/room.module';
     }),
     HotelModule,
     RoomModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [
