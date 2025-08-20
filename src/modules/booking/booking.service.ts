@@ -72,14 +72,13 @@ export class BookingService {
     }
 
     booking.status = BookingStatus.ACTIVE;
-    await booking.save();
 
     if (booking.room_id) {
       await this.roomModel.findByIdAndUpdate(booking.room_id, {
         is_available: false,
       });
     }
-    return booking;
+    return await booking.save();
   }
 
   async getAll(): Promise<Booking[]> {
@@ -135,7 +134,14 @@ export class BookingService {
       );
     }
 
+    if (booking.room_id && booking.status === BookingStatus.ACTIVE) {
+      await this.roomModel.findByIdAndUpdate(booking.room_id, {
+        is_available: true,
+      });
+    }
+
     booking.status = BookingStatus.CANCELLED;
-    return booking.save();
+
+    return await booking.save();
   }
 }
