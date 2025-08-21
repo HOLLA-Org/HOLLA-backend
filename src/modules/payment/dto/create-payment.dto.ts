@@ -17,19 +17,11 @@ export class CreatePaymentDto {
 
   @ApiProperty({
     description: 'Payment method used',
-    example: 'Credit Card',
+    example: 'ZALOPAY',
   })
   @IsString()
   @IsNotEmpty()
   payment_method: string;
-
-  @ApiProperty({
-    description: 'Current booking status',
-    example: 'Paid',
-  })
-  @IsString()
-  @IsNotEmpty()
-  booking_status: string;
 
   @ApiProperty({
     description: 'Discount code (optional)',
@@ -39,11 +31,4 @@ export class CreatePaymentDto {
   @IsString()
   @IsOptional()
   discount_code?: string;
-
-  @ApiProperty({
-    description: 'Original amount before discount',
-    example: 1500000,
-  })
-  @IsNumber()
-  amount: number;
 }

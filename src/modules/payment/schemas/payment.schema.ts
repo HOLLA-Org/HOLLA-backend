@@ -14,7 +14,7 @@ export class Payment {
   @Prop({ required: true })
   payment_method: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, default: 'Pending' })
   booking_status: string;
 
   @Prop({ required: true })
