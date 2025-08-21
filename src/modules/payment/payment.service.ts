@@ -3,7 +3,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { Payment, PaymentDocument } from './schemas/payment.schema';
 import { Booking, BookingDocument } from '../booking/schemas/booking.shema';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { DiscountService } from '../discount/discount.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Room, RoomDocument } from '../room/schemas/room.schema';
@@ -95,5 +95,19 @@ export class PaymentService {
 
   async getdAll(): Promise<Payment[]> {
     return this.paymentModel.find();
+  }
+
+  async remove(_id: string) {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`ID "${_id}" is not valid!`);
+    }
+
+    const hasPayment = await this.paymentModel.findById(_id);
+
+    if (!hasPayment) {
+      throw new BadRequestException('Payment not found!');
+    }
+
+    return hasPayment.deleteOne();
   }
 }

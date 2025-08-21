@@ -50,18 +50,16 @@ export class PaymentController {
     return this.paymentService.getdAll();
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.paymentService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-  //   return this.paymentService.update(+id, updatePaymentDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.paymentService.remove(+id);
-  // }
+  @Delete(':id')
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Delete a payment by id' })
+  @ApiResponse({
+    status: 200,
+    description: 'The payment has been successfully deleted.',
+  })
+  @ResponseMessage('Payment deleted successfully')
+  delete(@Param('id') _id: string) {
+    return this.paymentService.remove(_id);
+  }
 }
