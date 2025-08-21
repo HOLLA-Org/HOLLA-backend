@@ -86,7 +86,14 @@ export class BookingService {
       .find()
       .sort({ booked_at: -1 })
       .populate('user_id', 'username email')
-      .populate('room_id', 'name type');
+      .populate({
+        path: 'room_id',
+        select: 'name type hotel_id',
+        populate: {
+          path: 'hotel_id',
+          select: 'name address rating',
+        },
+      });
   }
 
   async getAllByStatus(
