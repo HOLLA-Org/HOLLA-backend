@@ -37,10 +37,18 @@ export class PaymentController {
     return this.paymentService.create(user_id, createPaymentDto);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.paymentService.findAll();
-  // }
+  @Get()
+  // @Roles(Role.Admin)
+  @Public()
+  @ApiOperation({ summary: '[Admin] Get all payments' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a list of all payments.',
+  })
+  @ResponseMessage('Payments retrieved successfully')
+  getAll() {
+    return this.paymentService.getdAll();
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {
