@@ -30,7 +30,7 @@ export class DiscountController {
   @Post()
   // @Roles(Role.Admin)
   @Public()
-  @ApiOperation({ summary: 'Create a new discount code' })
+  @ApiOperation({ summary: '[Admin] Create a new discount code' })
   @ApiResponse({
     status: 201,
     description: 'The discount has been successfully created.',
