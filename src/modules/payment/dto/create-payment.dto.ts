@@ -9,7 +9,7 @@ import {
 
 export class CreatePaymentDto {
   @ApiProperty({
-    description: 'Booking ID linked to the payment',
+    description: ' Booking id associated with the payment',
     example: '64e8c9f9a2b3c4d5e6f7a8b9',
   })
   @IsMongoId()
