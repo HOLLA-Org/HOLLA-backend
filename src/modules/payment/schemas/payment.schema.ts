@@ -5,6 +5,9 @@ export type PaymentDocument = Payment & Document;
 
 @Schema({ timestamps: true })
 export class Payment {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user_id: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Booking', required: true })
   booking_id: Types.ObjectId;
 

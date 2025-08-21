@@ -8,6 +8,7 @@ import { DiscountService } from '../discount/discount.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Room, RoomDocument } from '../room/schemas/room.schema';
 import { BookingStatus } from '@/constant';
+import { User, UserDocument } from '../users/schemas/user.schema';
 
 @Injectable()
 export class PaymentService {
@@ -15,6 +16,7 @@ export class PaymentService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
     @InjectModel(Room.name) private roomModel: Model<RoomDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly discountService: DiscountService,
   ) {}
 
@@ -24,9 +26,14 @@ export class PaymentService {
   ): Promise<Payment> {
     const { booking_id, payment_method, discount_code } = createPaymentDto;
 
+    const user = await this.userModel.findById(user_id);
+    if (!user) {
+      throw new BadRequestException('User not found with id');
+    }
+
     const booking = await this.bookingModel.findById(booking_id);
     if (!booking) {
-      throw new BadRequestException(`Booking not found with id ${booking_id}`);
+      throw new BadRequestException('Booking not found with id');
     }
 
     const existingPayment = await this.paymentModel.findOne({
@@ -35,8 +42,12 @@ export class PaymentService {
     });
 
     if (existingPayment) {
+      throw new BadRequestException('Payment already exists for booking');
+    }
+
+    if (booking.status === BookingStatus.ACTIVE) {
       throw new BadRequestException(
-        `Payment already exists for booking ${booking_id}`,
+        'Booking is already active and cannot be paid again',
       );
     }
 
@@ -71,6 +82,7 @@ export class PaymentService {
     }
 
     const payment = new this.paymentModel({
+      user_id,
       booking_id,
       discount_id: discount_code || null,
       payment_method,
