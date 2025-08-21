@@ -7,6 +7,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Review, ReviewDocument } from './schemas/review.schema';
 import { Booking, BookingDocument } from '../booking/schemas/booking.shema';
 import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
+import { BookingStatus } from '@/constant';
+import { Room } from '../room/schemas/room.schema';
 
 @Injectable()
 export class ReviewService {
@@ -15,23 +17,34 @@ export class ReviewService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
     @InjectModel(Hotel.name) private hotelModel: Model<HotelDocument>,
+    @InjectModel(Room.name) private roomModel: Model<Room>,
   ) {}
-  async create(user_id: string, createReviewDto: CreateReviewDto) {
-    const { booking_id, hotel_id, rating, comment } = createReviewDto;
+  async create(
+    user_id: string,
+    createReviewDto: CreateReviewDto,
+  ): Promise<Review> {
+    const { booking_id } = createReviewDto;
 
-    const user = await this.userModel.findById(user_id);
-    if (!user) {
-      throw new BadRequestException(`User with id not found`);
-    }
-
-    const booking = await this.bookingModel.findById(booking_id);
+    const booking = await this.bookingModel.findOne({
+      _id: booking_id,
+      user_id,
+    });
     if (!booking) {
-      throw new BadRequestException(`Booking with id not found`);
+      throw new BadRequestException(`Booking not found for this user`);
     }
 
-    const hotel = await this.hotelModel.findById(hotel_id);
+    const room = await this.roomModel.findById(booking.room_id);
+    if (!room) {
+      throw new BadRequestException(`Room not found for booking`);
+    }
+
+    const hotel = await this.hotelModel.findById(room.hotel_id);
     if (!hotel) {
-      throw new BadRequestException(`Hotel with id not found`);
+      throw new BadRequestException(`Hotel not found for room`);
+    }
+
+    if (booking.status !== BookingStatus.COMPLETED) {
+      throw new BadRequestException(`Booking is not completed, cannot review`);
     }
 
     const existingReview = await this.reviewModel.findOne({
@@ -44,29 +57,11 @@ export class ReviewService {
 
     const newReview = new this.reviewModel({
       user_id,
-      hotel_id,
+      hotel_id: hotel._id,
       booking_id,
-      rating,
-      comment,
-      review_date: new Date(),
+      ...createReviewDto,
     });
 
     return newReview.save();
-  }
-
-  findAll() {
-    return `This action returns all review`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} review`;
-  }
-
-  update(id: number, updateReviewDto: UpdateReviewDto) {
-    return `This action updates a #${id} review`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} review`;
   }
 }

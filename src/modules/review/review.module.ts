@@ -6,6 +6,7 @@ import { Review, ReviewSchema } from './schemas/review.schema';
 import { Booking, BookingSchema } from '../booking/schemas/booking.shema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { Hotel, HotelSchema } from '../hotel/schemas/hotel.schema';
+import { Room, RoomSchema } from '../room/schemas/room.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { Hotel, HotelSchema } from '../hotel/schemas/hotel.schema';
       { name: Booking.name, schema: BookingSchema },
       { name: User.name, schema: UserSchema },
       { name: Hotel.name, schema: HotelSchema },
+      { name: Room.name, schema: RoomSchema },
     ]),
   ],
 
