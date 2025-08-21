@@ -37,4 +37,16 @@ export class ReviewController {
     const user_id = req.user._id;
     return this.reviewService.create(user_id, createReviewDto);
   }
+
+  @Get(':hotel_id')
+  @ApiOperation({ summary: 'Get all reviews for a hotel' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of reviews for the specified hotel',
+  })
+  @ResponseMessage('Reviews retrieved successfully')
+  getAllByHotel(@Param('hotel_id') hotel_id: string, @Req() req) {
+    const user_id = req.user._id;
+    return this.reviewService.findAllByHotel(hotel_id, user_id);
+  }
 }

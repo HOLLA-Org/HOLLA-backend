@@ -64,4 +64,16 @@ export class ReviewService {
 
     return newReview.save();
   }
+
+  async findAllByHotel(hotel_id: string, user_id: string): Promise<Review[]> {
+    const reviews = await this.reviewModel
+      .find({ hotel_id })
+      .sort({ review_date: -1 });
+
+    return reviews.sort((a, b) => {
+      if (a.user_id.toString() === user_id) return -1;
+      if (b.user_id.toString() === user_id) return 1;
+      return 0;
+    });
+  }
 }
