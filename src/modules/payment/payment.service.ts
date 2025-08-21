@@ -92,4 +92,8 @@ export class PaymentService {
 
     return payment.save();
   }
+
+  async getdAll(): Promise<Payment[]> {
+    return this.paymentModel.find();
+  }
 }
