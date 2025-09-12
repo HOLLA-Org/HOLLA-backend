@@ -93,7 +93,6 @@ export class AuthService {
       confirmPassword,
       phone,
       address,
-      image,
       gender,
       date_of_birth,
     } = registerDto;
@@ -139,7 +138,6 @@ export class AuthService {
       password: hashedPassword,
       phone,
       address,
-      image,
       gender,
       date_of_birth,
       isActive: false,

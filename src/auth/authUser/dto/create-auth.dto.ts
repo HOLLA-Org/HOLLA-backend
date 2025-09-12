@@ -60,14 +60,6 @@ export class CreateAuthDto {
 
   @ApiProperty({
     required: false,
-    example: 'https://example.com/path/to/image.jpg',
-    description: "URL of the user's profile picture (optional)",
-  })
-  @IsOptional()
-  image?: string;
-
-  @ApiProperty({
-    required: false,
     example: 'male',
     description: 'Gender of the user (optional)',
     enum: ['male', 'female', 'other'],

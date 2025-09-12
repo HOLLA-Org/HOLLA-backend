@@ -1,7 +1,7 @@
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
-import { isValidObjectId, Model } from 'mongoose';
+import { isValidObjectId, Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { hashPassword } from '@/helpers';
 import { ConfigService } from '@nestjs/config';
@@ -16,13 +16,15 @@ import ObjectId from 'mongoose';
 import { UserType } from '@/auth/authUser/auth';
 import { ROLES } from '@/constant';
 import { MailerService } from '@nestjs-modules/mailer';
+import { MediaService } from '../media/media.service';
+import { UploadApiOptions } from 'cloudinary';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private configService: ConfigService,
-    private readonly mailerService: MailerService,
+    private readonly mediaService: MediaService,
   ) {}
 
   async findById(_id: string) {
@@ -218,5 +220,43 @@ export class UsersService {
       .replace(/\s+/g, '') // Remove spaces
       .replace(/[^a-z0-9]/g, '') // Remove special characters
       .substring(0, 15); // Limit length (optional)
+  }
+
+  async updateAvatar(
+    user_id: Types.ObjectId,
+    file: Express.Multer.File,
+  ): Promise<UserDocument> {
+    const user = await this.userModel.findById(user_id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.avatarPublicId) {
+      await this.mediaService.deleteFile(user.avatarPublicId);
+    }
+
+    const uploadOptions: UploadApiOptions = {
+      folder: `users/${user_id}/avatars`,
+      public_id: `avatar_${user_id}_${Date.now()}`,
+      overwrite: true,
+      transformation: [
+        { width: 250, height: 250, crop: 'fill', gravity: 'face' },
+      ],
+    };
+
+    const newMedia = await this.mediaService.uploadAndSave(
+      file,
+      uploadOptions,
+      { owner_id: user_id },
+    );
+
+    user.avatarUrl = newMedia.secureUrl;
+    user.avatarPublicId = newMedia.publicId;
+
+    return user.save();
+  }
+
+  async getProfile(_id: string) {
+    return await this.userModel.findById(_id).select('-password').lean();
   }
 }

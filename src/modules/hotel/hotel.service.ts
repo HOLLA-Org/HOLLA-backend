@@ -3,13 +3,16 @@ import { CreateHotelDto } from './dto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Hotel, HotelDocument } from './schemas/hotel.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { isValidObjectId } from '@/utils';
+import { UploadApiOptions } from 'cloudinary';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class HotelService {
   constructor(
     @InjectModel(Hotel.name) private readonly hotelModel: Model<Hotel>,
+    private readonly mediaService: MediaService,
   ) {}
   async create(createHotelDto: CreateHotelDto): Promise<Hotel> {
     const { name } = createHotelDto;
@@ -104,4 +107,37 @@ export class HotelService {
 
     return hasHotel.deleteOne();
   }
+
+  // async addPhotos(
+  //   hotelId: string,
+  //   files: Express.Multer.File[],
+  // ): Promise<HotelDocument> {
+  //   if (!isValidObjectId(hotelId)) {
+  //     throw new BadRequestException(`ID "${hotelId}" is not valid!`);
+  //   }
+  //   const hotel = await this.hotelModel.findById(hotelId);
+  //   if (!hotel) {
+  //     throw new BadRequestException('Hotel not found');
+  //   }
+
+  //   // Dùng Promise.all để upload nhiều file song song cho hiệu quả
+  //   const uploadPromises = files.map((file) => {
+  //     // Chuẩn bị tùy chọn upload cho ảnh khách sạn
+  //     const uploadOptions: UploadApiOptions = {
+  //       folder: `hotels/${hotelId}`,
+  //       transformation: [{ quality: 'auto:good' }, { fetch_format: 'auto' }],
+  //     };
+  //     // Gọi hàm uploadAndSave từ MediaService
+  //     return this.mediaService.uploadAndSave(file, uploadOptions, {
+  //       hotel_id: new Types.ObjectId(hotelId),
+  //     });
+  //   });
+
+  //   const newMediaDocs = await Promise.all(uploadPromises);
+
+  //   // Lấy _id từ các media document vừa tạo và thêm vào hotel
+  //   hotel.images.push(...newMediaDocs.map((doc) => doc._id));
+
+  //   return hotel.save();
+  // }
 }

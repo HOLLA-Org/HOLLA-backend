@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ROLES } from '@/constant';
+import { DEFAULT_AVATAR_URL, ROLES } from '@/constant';
+import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 @Schema({ timestamps: true })
@@ -19,8 +20,15 @@ export class User {
   @Prop({ default: '' })
   address: string;
 
-  @Prop({ default: '' })
-  image: string;
+  @Prop({
+    type: String,
+    required: false,
+    default: DEFAULT_AVATAR_URL,
+  })
+  avatarUrl: string;
+
+  @Prop({ type: String, required: false, select: false })
+  avatarPublicId: string;
 
   @Prop({ enum: ['male', 'female', 'other', ''], default: '' })
   gender: string;

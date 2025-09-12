@@ -17,8 +17,8 @@ export class Hotel {
   @Prop({ default: 0 })
   rating: number;
 
-  @Prop({ type: [String], default: [] })
-  images: string[];
+  @Prop({ type: [{ url: String, public_id: String }], default: [] })
+  images: { url: string; public_id: string }[];
 
   @Prop({ default: 0 })
   rating_count: number;
