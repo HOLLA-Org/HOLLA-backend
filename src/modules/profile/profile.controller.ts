@@ -31,4 +31,12 @@ export class ProfileController {
     const user_id = req.user._id;
     return this.profileService.getProfile(user_id);
   }
+
+  @Get('profile')
+  @ApiOperation({ summary: 'Get full user information' })
+  @ResponseMessage('Get profile successfully')
+  async getFullProfile(@Request() req: RequestWithUser) {
+    const user_id = req.user._id;
+    return this.profileService.getFullProfile(user_id);
+  }
 }

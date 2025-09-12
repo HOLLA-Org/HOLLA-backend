@@ -18,11 +18,14 @@ export class ProfileService {
   @ApiOperation({ summary: 'Get basic user information' })
   @ResponseMessage('Get base profile successfully')
   async getProfile(user_id: Types.ObjectId) {
-    return this.userModel.findById(user_id).select('').lean();
+    return this.userModel.findById(user_id).select('username email').lean();
   }
 
-  findAll() {
-    return `This action returns all profile`;
+  async getFullProfile(user_id: Types.ObjectId) {
+    return this.userModel
+      .findById(user_id)
+      .select('username email phone address avatarUrl gender date_of_birth')
+      .lean();
   }
 
   findOne(id: number) {
