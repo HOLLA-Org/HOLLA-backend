@@ -26,8 +26,8 @@ export class Room {
   @Prop({ default: true })
   is_available: boolean;
 
-  @Prop({ type: [String], default: [] })
-  images: string[];
+  @Prop({ type: [{ url: String, public_id: String }], default: [] })
+  images: { url: string; public_id: string }[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

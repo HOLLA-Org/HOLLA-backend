@@ -17,6 +17,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { PaymentModule } from './modules/payment/payment.module';
 import { DiscountModule } from './modules/discount/discount.module';
 import { ReviewModule } from './modules/review/review.module';
+import { MediaModule } from './modules/media/media.module';
+import { ProfileModule } from './modules/profile/profile.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -66,6 +68,8 @@ import { ReviewModule } from './modules/review/review.module';
     PaymentModule,
     DiscountModule,
     ReviewModule,
+    MediaModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [

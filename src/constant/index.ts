@@ -18,3 +18,6 @@ export enum BookingStatus {
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
+
+export const DEFAULT_AVATAR_URL =
+  'https://res.cloudinary.com/dasiiuipv/image/upload/v1755882140/86621cbfa861183f4170_pf3jgf.jpg';
