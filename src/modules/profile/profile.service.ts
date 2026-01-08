@@ -129,11 +129,7 @@ export class ProfileService {
     throw new NotFoundException('User not found');
   }
 
-  const { password, newPassword, confirmPassword } = dto;
-
-  if (newPassword !== confirmPassword) {
-    throw new BadRequestException('Confirm password does not match');
-  }
+  const { password, new_password } = dto;
 
   const isMatch = await comparePassword(password, user.password);
 
@@ -141,14 +137,14 @@ export class ProfileService {
     throw new BadRequestException('Current password is incorrect');
   }
 
-  const isSamePassword = await comparePassword(newPassword, user.password);
+  const isSamePassword = await comparePassword(new_password, user.password);
   if (isSamePassword) {
     throw new BadRequestException(
       'New password must be different from old password',
     );
   }
 
-  const hashedPassword = await hashPassword(newPassword);
+  const hashedPassword = await hashPassword(new_password);
 
   user.password = hashedPassword;
   await user.save();
