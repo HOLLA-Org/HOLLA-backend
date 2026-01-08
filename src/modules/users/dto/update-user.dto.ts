@@ -4,36 +4,14 @@ import {
   IsPhoneNumber,
   Matches,
   IsOptional,
+  IsEnum,
+  IsDateString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 export class UpdateUserDto {
   @ApiProperty({ example: 'vihongminh', description: 'Full name of the user' })
   @IsOptional()
-  username: string;
-
-  @ApiProperty({
-    example: 'user@example.com',
-    description: 'Valid email address',
-  })
-  @IsOptional()
-  email: string;
-
-  @ApiProperty({ example: 'Password@123', description: 'Secure password' })
-  @IsNotEmpty()
-  @Matches(/^(?=.*[A-Z])(?=.*[\W_]).{6,}$/, {
-    message:
-      'Password must be at least 6 characters long, contain 1 uppercase letter, and 1 special character.',
-  })
-  @IsOptional()
-  password: string;
-
-  @ApiProperty({
-    required: false,
-    example: 'ADMIN',
-    description: "User's role",
-  })
-  @IsOptional()
-  role: string;
+  username?: string;
 
   @ApiProperty({
     required: false,
@@ -53,9 +31,19 @@ export class UpdateUserDto {
 
   @ApiProperty({
     required: false,
-    example: 'https://example.com/path/to/image.jpg',
-    description: "URL of the user's profile picture (optional)",
+    example: 'male',
+    description: 'Gender of the user',
   })
   @IsOptional()
-  image: string;
+  @IsEnum(['male', 'female', 'other', ''])
+  gender?: string;
+
+  @ApiProperty({
+    required: false,
+    example: '2000-01-01',
+    description: 'Date of birth (ISO format)',
+  })
+  @IsOptional()
+  @IsDateString()
+  date_of_birth?: Date;
 }

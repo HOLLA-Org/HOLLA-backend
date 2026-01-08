@@ -7,8 +7,8 @@ import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
-    MediaModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MediaModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

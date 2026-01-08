@@ -3,7 +3,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({
-    example: 'Vi Hong Minh',
+    example: 'John Doe',
     description: 'Username of the user',
   })
   @IsOptional()
@@ -11,7 +11,7 @@ export class UpdateProfileDto {
   username?: string;
 
   @ApiPropertyOptional({
-    example: 'user@example',
+    example: 'user@example.com',
     description: 'Email address of the user',
   })
   @IsOptional()
@@ -35,14 +35,6 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   address?: string;
-
-  @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    description: 'Profile image URL',
-  })
-  @IsOptional()
-  @IsUrl({}, { message: 'Image must be a valid URL' })
-  image?: string;
 
   @ApiPropertyOptional({
     example: 'Male',

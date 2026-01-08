@@ -152,21 +152,15 @@ export class UsersService {
       throw new BadRequestException(`ID "${_id}" is not valid!`);
     }
 
-    const { username, email, password, role, phone, address, image } =
-      updateUserDto;
-
-    // Hash password
-    const hashedPassword = await hashPassword(password);
+    const { username, phone, address, gender, date_of_birth } = updateUserDto;
 
     const filter = { _id };
     const update = {
       username,
-      email,
-      password: hashedPassword,
-      role,
       phone,
       address,
-      image,
+      gender,
+      date_of_birth,
     };
     const options = { new: true };
 
@@ -190,7 +184,8 @@ export class UsersService {
         'role',
         'phone',
         'address',
-        'image',
+        'gender',
+        'date_of_birth',
       ],
     });
   }
@@ -220,43 +215,5 @@ export class UsersService {
       .replace(/\s+/g, '') // Remove spaces
       .replace(/[^a-z0-9]/g, '') // Remove special characters
       .substring(0, 15); // Limit length (optional)
-  }
-
-  async updateAvatar(
-    user_id: Types.ObjectId,
-    file: Express.Multer.File,
-  ): Promise<UserDocument> {
-    const user = await this.userModel.findById(user_id);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.avatarPublicId) {
-      await this.mediaService.deleteFile(user.avatarPublicId);
-    }
-
-    const uploadOptions: UploadApiOptions = {
-      folder: `users/${user_id}/avatars`,
-      public_id: `avatar_${user_id}_${Date.now()}`,
-      overwrite: true,
-      transformation: [
-        { width: 250, height: 250, crop: 'fill', gravity: 'face' },
-      ],
-    };
-
-    const newMedia = await this.mediaService.uploadAndSave(
-      file,
-      uploadOptions,
-      { owner_id: user_id },
-    );
-
-    user.avatarUrl = newMedia.secureUrl;
-    user.avatarPublicId = newMedia.publicId;
-
-    return user.save();
-  }
-
-  async getProfile(_id: string) {
-    return await this.userModel.findById(_id).select('-password').lean();
   }
 }
