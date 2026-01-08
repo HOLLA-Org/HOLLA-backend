@@ -53,5 +53,5 @@ export class CreateUserDto {
     description: "URL of the user's profile picture (optional)",
   })
   @IsOptional()
-  image?: string;
+  avatarUrl?: string;
 }

@@ -1,38 +1,34 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
   Patch,
-  Param,
-  Delete,
+  Body,
   Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ProfileService } from './profile.service';
-import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { Role, Roles } from '@/decorator/roles.decorator';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ResponseMessage } from '@/decorator/customize';
 import { RequestWithUser } from '@/common/interfaces/request-with-user.interface';
-
+import { Role, Roles } from '@/decorator/roles.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 @ApiBearerAuth()
 @ApiTags('Profile')
 @Roles(Role.User)
 @Controller('profile')
-@Controller('profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  @Get('base-profile')
-  @ApiOperation({ summary: 'Get basic user information' })
-  @ResponseMessage('Get base profile successfully')
-  async getProfile(@Request() req: RequestWithUser) {
-    const user_id = req.user._id;
-    return this.profileService.getProfile(user_id);
-  }
-
-  @Get('profile')
+  @Get()
   @ApiOperation({ summary: 'Get full user information' })
   @ResponseMessage('Get profile successfully')
   async getFullProfile(@Request() req: RequestWithUser) {
@@ -50,5 +46,42 @@ export class ProfileController {
   ) {
     const user_id = req.user._id;
     return this.profileService.updateProfile(user_id, dto);
+  }
+
+  @Patch('update-avatar')
+  @ApiOperation({ summary: 'Update user avatar' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  @ResponseMessage('Update avatar successfully')
+  async updateAvatar(
+    @Request() req: RequestWithUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const user_id = req.user._id;
+    return this.profileService.updateAvatar(user_id, file);
+  }
+  
+
+  @Patch('change-password')
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ResponseMessage('Change password successfully')
+  async changePassword(
+    @Request() req: RequestWithUser,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    const user_id = req.user._id;
+    return this.profileService.changePassword(user_id, dto);
   }
 }

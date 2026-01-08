@@ -31,6 +31,12 @@ async function bootstrap() {
     .addTag('Users', 'User management endpoints')
     .addTag('Hotels', 'Hotel management endpoints')
     .addTag('Rooms', 'Room management endpoints')
+    .addTag('Bookings', 'Booking management endpoints')
+    .addTag('Payments', 'Payment management endpoints')
+    .addTag('Discounts', 'Discount management endpoints')
+    .addTag('Reviews', 'Review management endpoints')
+    .addTag('Media', 'Media management endpoints')
+    .addTag('Profile', 'Profile management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

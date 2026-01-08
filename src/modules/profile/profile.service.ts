@@ -1,29 +1,22 @@
 import {
   BadRequestException,
-  Controller,
-  Get,
   Injectable,
-  Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ApiOperation } from '@nestjs/swagger';
-import { ResponseMessage } from '@/decorator/customize';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../users/schemas/user.schema';
+import { MediaService } from '../media/media.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { comparePassword, hashPassword } from '@/helpers';
 
 @Injectable()
 export class ProfileService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    private readonly mediaService: MediaService,
   ) {}
-
-  @Get('base-profile')
-  @ApiOperation({ summary: 'Get basic user information' })
-  @ResponseMessage('Get base profile successfully')
-  async getProfile(user_id: Types.ObjectId) {
-    return this.userModel.findById(user_id).select('username email').lean();
-  }
 
   async getFullProfile(user_id: Types.ObjectId) {
     return this.userModel
@@ -79,11 +72,6 @@ export class ProfileService {
       updateData.address = dto.address.trim();
     }
 
-    // Update image
-    if (dto.image && dto.image.trim() !== '') {
-      updateData.image = dto.image.trim();
-    }
-
     // Update gender
     if (dto.gender && dto.gender.trim() !== '') {
       updateData.gender = dto.gender.trim();
@@ -103,4 +91,70 @@ export class ProfileService {
 
     return {};
   }
+
+  async updateAvatar(
+    user_id: Types.ObjectId,
+    file: Express.Multer.File,
+  ) {
+    const user = await this.userModel.findById(user_id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    } 
+
+    const avatarUrl = await this.mediaService.uploadImage(file, {
+      folder: `users/${user_id}/avatars`,
+      transformation: [
+        { width: 250, height: 250, crop: 'fill', gravity: 'face' },
+      ],
+    });
+
+    user.avatarUrl = avatarUrl;
+    await user.save();
+
+    return {
+      message: 'Update avatar successfully',
+      data: {
+        avatarUrl: user.avatarUrl,
+      },
+    };
+  } 
+
+  async changePassword(
+  user_id: Types.ObjectId,
+  dto: ChangePasswordDto,
+) {
+  const user = await this.userModel.findById(user_id).select('password');
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  const { password, newPassword, confirmPassword } = dto;
+
+  if (newPassword !== confirmPassword) {
+    throw new BadRequestException('Confirm password does not match');
+  }
+
+  const isMatch = await comparePassword(password, user.password);
+
+  if (!isMatch) {
+    throw new BadRequestException('Current password is incorrect');
+  }
+
+  const isSamePassword = await comparePassword(newPassword, user.password);
+  if (isSamePassword) {
+    throw new BadRequestException(
+      'New password must be different from old password',
+    );
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  return {
+    message: 'Change password successfully',
+  };
+}
 }

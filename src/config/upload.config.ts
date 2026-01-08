@@ -5,9 +5,15 @@ import { BadRequestException } from '@nestjs/common';
 
 export const multerConfig = {
   storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
   fileFilter: (req: Request, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
-      return cb(new BadRequestException('Only images are allowed!'), false);
+      return cb(
+        new BadRequestException('Only images are allowed!'),
+        false,
+      );
     }
     cb(null, true);
   },
@@ -16,8 +22,15 @@ export const multerConfig = {
 export const compressImage = async (
   file: Express.Multer.File,
 ): Promise<Buffer> => {
-  return await sharp(file.buffer)
-    .resize({ width: 800 })
-    .jpeg({ quality: 80 })
-    .toBuffer();
+  const image = sharp(file.buffer).resize({ width: 800 });
+
+  if (file.mimetype === 'image/png') {
+    return image.png({ quality: 80 }).toBuffer();
+  }
+
+  if (file.mimetype === 'image/webp') {
+    return image.webp({ quality: 80 }).toBuffer();
+  }
+
+  return image.jpeg({ quality: 80 }).toBuffer();
 };

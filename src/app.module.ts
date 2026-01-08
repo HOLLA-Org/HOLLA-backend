@@ -19,6 +19,7 @@ import { DiscountModule } from './modules/discount/discount.module';
 import { ReviewModule } from './modules/review/review.module';
 import { MediaModule } from './modules/media/media.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { RolesGuard } from './auth/roles.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -77,6 +78,10 @@ import { ProfileModule } from './modules/profile/profile.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: APP_INTERCEPTOR,

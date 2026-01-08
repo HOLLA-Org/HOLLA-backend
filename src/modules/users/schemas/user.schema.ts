@@ -27,9 +27,6 @@ export class User {
   })
   avatarUrl: string;
 
-  @Prop({ type: String, required: false, select: false })
-  avatarPublicId: string;
-
   @Prop({ enum: ['male', 'female', 'other', ''], default: '' })
   gender: string;
 
@@ -41,7 +38,7 @@ export class User {
 
   @Prop({ default: false })
   isActive: boolean;
-
+  
   @Prop()
   codeId: string;
   @Prop()
