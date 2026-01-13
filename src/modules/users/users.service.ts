@@ -13,7 +13,7 @@ import {
 import aqp from 'api-query-params';
 import { getInfo } from '@/utils';
 import ObjectId from 'mongoose';
-import { UserType } from '@/auth/authUser/auth';
+import { UserType } from '@/modules/auth/authUser/auth';
 import { ROLES } from '@/constant';
 import { MailerService } from '@nestjs-modules/mailer';
 import { MediaService } from '../media/media.service';

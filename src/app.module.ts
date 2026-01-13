@@ -6,8 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformInterceptor } from './core/transform.interceptor';
-import { AuthModule } from './auth/authUser/auth.module';
-import { JwtAuthGuard } from './auth/authUser/passport/jwt-auth.guard';
+import { AuthModule } from './modules/auth/authUser/auth.module';
+import { JwtAuthGuard } from './modules/auth/authUser/passport/jwt-auth.guard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { HotelModule } from './modules/hotel/hotel.module';
@@ -19,7 +19,8 @@ import { DiscountModule } from './modules/discount/discount.module';
 import { ReviewModule } from './modules/review/review.module';
 import { MediaModule } from './modules/media/media.module';
 import { ProfileModule } from './modules/profile/profile.module';
-import { RolesGuard } from './auth/roles.guard';
+import { RolesGuard } from './modules/auth/roles.guard';
+import { NotificationModule } from './modules/notification/notification.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -71,10 +72,10 @@ import { RolesGuard } from './auth/roles.guard';
     ReviewModule,
     MediaModule,
     ProfileModule,
+    NotificationModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
