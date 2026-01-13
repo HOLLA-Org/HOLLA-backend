@@ -26,7 +26,6 @@ async function bootstrap() {
     .setDescription('API documentation for HoLLa project')
     .setVersion('1.0')
     .addBearerAuth() // Optional: for JWT auth support
-    .addTag('App', 'Application related endpoints')
     .addTag('Authentication User', 'Authentication related endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Hotels', 'Hotel management endpoints')
@@ -35,8 +34,8 @@ async function bootstrap() {
     .addTag('Payments', 'Payment management endpoints')
     .addTag('Discounts', 'Discount management endpoints')
     .addTag('Reviews', 'Review management endpoints')
-    .addTag('Media', 'Media management endpoints')
     .addTag('Profile', 'Profile management endpoints')
+    .addTag('Notification', 'Notification management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
