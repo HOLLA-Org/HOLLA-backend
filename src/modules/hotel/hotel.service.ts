@@ -130,6 +130,13 @@ export class HotelService {
     return hotel;
   }
 
+  async searchByName(name: string) {
+    return this.hotelModel.find({
+      name: { $regex: name, $options: 'i' },
+      availableRooms: { $gt: 0 },
+    });
+  }
+
   async updateHotel(
     id: string,
     updateHotelDto: UpdateHotelDto,
