@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsEnum,
   IsDateString,
+  IsNumber,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 export class UpdateUserDto {
@@ -19,7 +20,7 @@ export class UpdateUserDto {
     description: 'Valid phone number',
   })
   @IsOptional()
-  phone: string;
+  phone?: string;
 
   @ApiProperty({
     required: false,
@@ -27,7 +28,17 @@ export class UpdateUserDto {
     description: "The user's street address",
   })
   @IsOptional()
-  address: string;
+  address?: string;
+
+  @ApiProperty({ example: 10.776889 })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiProperty({ example: 106.700806 })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @ApiProperty({
     required: false,

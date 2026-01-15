@@ -4,6 +4,7 @@ import {
   IsPhoneNumber,
   Matches,
   IsOptional,
+  IsNumber,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -46,6 +47,16 @@ export class CreateUserDto {
   })
   @IsOptional()
   address?: string;
+
+  @ApiProperty({ example: 10.776889 })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+  
+  @ApiProperty({ example: 106.700806 })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @ApiProperty({
     required: false,

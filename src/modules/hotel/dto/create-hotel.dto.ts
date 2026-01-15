@@ -1,52 +1,69 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsArray,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateHotelDto {
-  @ApiProperty({
-    description: 'Name of the hotel',
-    example: 'Kim Hotel',
-  })
+  @ApiProperty({ example: 'Kim Hotel' })
   @IsString()
   name: string;
 
-  @ApiProperty({
-    description: 'Address of the hotel',
-    example: 'So 24, Ngo 165, Khuong Thuong, Dong Da, Ha Noi',
-  })
+  @ApiProperty({ example: '24 Nguyễn Huệ, Q1, TP.HCM' })
   @IsString()
   address: string;
 
-  @ApiPropertyOptional({
-    description: 'Details description of the hotel',
-    example: 'A luxury beachfront resort with spa and pool services.',
-  })
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @ApiProperty({ example: 10.776889 })
+  @IsNumber()
+  latitude: number;
 
-  @ApiPropertyOptional({
-    description: 'Average rating of the hotel (1 to 5)',
-    example: 4.5,
-  })
+  @ApiProperty({ example: 106.700806 })
+  @IsNumber()
+  longitude: number;
+
+  @ApiPropertyOptional({ example: 40000 })
+  @IsOptional()
+  @IsNumber()
+  priceHour?: number;
+
+  @ApiPropertyOptional({ example: 400000 })
+  @IsOptional()
+  @IsNumber()
+  priceDay?: number;
+
+  @ApiPropertyOptional({ example: 50 })
+  @IsOptional()
+  @IsNumber()
+  totalRooms?: number;
+
+  @ApiPropertyOptional({ example: 20 })
+  @IsOptional()
+  @IsNumber()
+  availableRooms?: number;
+
+  @ApiPropertyOptional({ example: 4.5 })
   @IsOptional()
   @IsNumber()
   rating?: number;
 
-  @ApiProperty({
-    description: 'List of image URLs for the room',
-    example: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
-    required: false,
-  })
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  images?: string[];
-
-  @ApiPropertyOptional({
-    description: 'Number of rating submissions',
-    example: 120,
-  })
+  @ApiPropertyOptional({ example: 120 })
   @IsOptional()
   @IsNumber()
-  rating_count?: number;
+  ratingCount?: number;
+
+  @ApiPropertyOptional({
+    example: ['https://example.com/img1.jpg'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  isPopular?: boolean;
 }
