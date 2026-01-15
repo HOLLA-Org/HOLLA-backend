@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   Request,
+  Query,
 } from '@nestjs/common';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
@@ -71,6 +72,13 @@ export class HotelController {
     return this.hotelService.getTopRatedHotels();
   }
 
+  @Get('search')
+  @Public()
+  @ApiOperation({ summary: 'Search hotels by name' })
+  search(@Query('name') name: string) {
+    return this.hotelService.searchByName(name);
+  }
+
   @Get('by-name/:name')
   @Public()
   @ApiOperation({ summary: 'Find hotel by name' })
@@ -79,6 +87,7 @@ export class HotelController {
   findByName(@Param('name') name: string) {
     return this.hotelService.findOneByName({ name });
   }
+  
 
   @Patch(':id')
   @Public()
