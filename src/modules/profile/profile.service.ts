@@ -21,7 +21,7 @@ export class ProfileService {
   async getFullProfile(user_id: Types.ObjectId) {
     return this.userModel
       .findById(user_id)
-      .select('username email phone address avatarUrl gender date_of_birth')
+      .select('username email phone address latitude longitude avatarUrl gender date_of_birth')
       .lean();
   }
 
@@ -70,6 +70,14 @@ export class ProfileService {
     // Update address
     if (dto.address && dto.address.trim() !== '') {
       updateData.address = dto.address.trim();
+    }
+
+    if (
+      typeof dto.latitude === 'number' &&
+      typeof dto.longitude === 'number'
+    ) {
+      updateData.latitude = dto.latitude;
+      updateData.longitude = dto.longitude;
     }
 
     // Update gender

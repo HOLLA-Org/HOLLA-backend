@@ -21,6 +21,7 @@ import { MediaModule } from './modules/media/media.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { RolesGuard } from './modules/auth/roles.guard';
 import { NotificationModule } from './modules/notification/notification.module';
+import { LocationModule } from './modules/location/location.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -73,6 +74,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     MediaModule,
     ProfileModule,
     NotificationModule,
+    LocationModule,
   ],
   controllers: [],
   providers: [

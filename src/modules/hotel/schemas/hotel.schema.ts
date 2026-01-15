@@ -11,17 +11,36 @@ export class Hotel {
   @Prop({ required: true })
   address: string;
 
-  @Prop()
-  description: string;
+  @Prop({ type: Number, required: true })
+  latitude: number;
+
+  @Prop({ type: Number, required: true })
+  longitude: number;
+
+  @Prop({ type: Number, default: 0 })
+  priceHour: number;
+
+  @Prop({ type: Number, default: 0 })
+  priceDay: number;
+
+  @Prop({ default: 0 })
+  totalRooms: number;
+
+  @Prop({ default: 0 })
+  availableRooms: number;
 
   @Prop({ default: 0 })
   rating: number;
 
-  @Prop({ type: [{ url: String, public_id: String }], default: [] })
-  images: { url: string; public_id: string }[];
-
   @Prop({ default: 0 })
-  rating_count: number;
+  ratingCount: number;
+
+  @Prop({ type: [String], default: [] })
+  images: string[];
+
+  @Prop({ default: false })
+  isPopular: boolean;
+
 }
 
 export const HotelSchema = SchemaFactory.createForClass(Hotel);

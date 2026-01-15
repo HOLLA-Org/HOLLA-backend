@@ -20,6 +20,12 @@ export class User {
   @Prop({ default: '' })
   address: string;
 
+  @Prop({ type: Number, default: null })
+  latitude: number | null;
+
+  @Prop({ type: Number, default: null })
+  longitude: number | null;
+
   @Prop({
     type: String,
     required: false,
