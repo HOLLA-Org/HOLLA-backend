@@ -53,15 +53,16 @@ export class FavoriteService {
       .find({ userId })
       .populate({
         path: 'hotelId',
-        match: { availableRooms: { $gt: 0 } },
-        select: 'name rating ratingCount priceHour address images',
       })
       .sort({ createdAt: -1 })
       .lean();
 
     return favorites
       .filter(f => f.hotelId)
-      .map(f => f.hotelId);
+      .map(f => ({
+        ...f.hotelId,
+        isFavorite: true,
+      }));
   }
 
   async getFavoriteIds(userId: Types.ObjectId) {
