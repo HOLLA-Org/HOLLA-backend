@@ -30,20 +30,31 @@ export class HotelService {
     return this.hotelModel.create(createHotelDto);
   }
 
-  async getAllHotels() {
-    return this.hotelModel.find();
+  async getAllHotels(userId?: Types.ObjectId) {
+    return this.hotelModel.aggregate([
+      {
+        $match: {
+          availableRooms: { $gt: 0 },
+        },
+      },
+      ...this.favoriteLookupPipeline(userId?.toString()),
+    ]);
   }
 
-  async getPopularHotels() {
-    return this.hotelModel
-      .find({
-        isPopular: true,
-        availableRooms: { $gt: 0 },
-      })
-      .limit(10);
+  async getPopularHotels(userId?: Types.ObjectId) {
+    return this.hotelModel.aggregate([
+      {
+        $match: {
+          isPopular: true,
+          availableRooms: { $gt: 0 },
+        },
+      },
+      { $limit: 10 },
+      ...this.favoriteLookupPipeline(userId?.toString()),
+    ]);
   }
 
-  async getRecommendedHotelsNearUser(userId: Types.ObjectId) {
+  async getRecommendedHotelsNearUser(userId?: Types.ObjectId) {
     const user = await this.userModel.findById(userId).lean();
 
     if (!user?.latitude || !user?.longitude) {
@@ -109,16 +120,21 @@ export class HotelService {
       },
       { $sort: { distance: 1 } },
       { $limit: 5 },
+      ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
 
-  async getTopRatedHotels() {
-    return this.hotelModel
-      .find({
-        availableRooms: { $gt: 0 },
-      })
-      .sort({ ratingCount: -1, rating: -1 })
-      .limit(10);
+  async getTopRatedHotels(userId?: Types.ObjectId) {
+    return this.hotelModel.aggregate([
+      {
+        $match: {
+          availableRooms: { $gt: 0 },
+        },
+      },
+      { $sort: { ratingCount: -1, rating: -1 } },
+      { $limit: 10 },
+      ...this.favoriteLookupPipeline(userId?.toString()),
+    ]);
   }
   
   async findOneByName({ name }: { name: string }) {
@@ -130,11 +146,16 @@ export class HotelService {
     return hotel;
   }
 
-  async searchByName(name: string) {
-    return this.hotelModel.find({
-      name: { $regex: name, $options: 'i' },
-      availableRooms: { $gt: 0 },
-    });
+  async searchByName(name: string, userId?: Types.ObjectId) {
+    return this.hotelModel.aggregate([
+      {
+        $match: {
+          name: { $regex: name, $options: 'i' },
+          availableRooms: { $gt: 0 },
+        },
+      },
+      ...this.favoriteLookupPipeline(userId?.toString()),
+    ]);
   }
 
   async updateHotel(
@@ -169,5 +190,47 @@ export class HotelService {
     }
 
     return hotel.deleteOne();
+  }
+
+  private favoriteLookupPipeline(userId?: string) {
+    return [
+      {
+        $lookup: {
+          from: 'favorites',
+          let: {
+            hotelId: '$_id',
+            userId: userId,
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [
+                        { $toObjectId: '$hotelId' },
+                        '$$hotelId',
+                      ],
+                    },
+                    {
+                      $eq: ['$userId', '$$userId'],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'favorite',
+        },
+      },
+      {
+        $addFields: {
+          isFavorite: { $gt: [{ $size: '$favorite' }, 0] },
+        },
+      },
+      {
+        $project: { favorite: 0 },
+      },
+    ];
   }
 }

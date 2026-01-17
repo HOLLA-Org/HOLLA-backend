@@ -52,9 +52,9 @@ export class HotelController {
   @Roles(Role.User)
   @ApiOperation({ summary: 'Get popular hotels' })
   @ResponseMessage('Popular hotels fetched successfully')
-  getPopular() {
-    return this.hotelService.getPopularHotels();
-  }
+  getPopular(@Request() req: RequestWithUser) {
+  return this.hotelService.getPopularHotels(req.user._id);
+}
 
   @Get('recommended')
   @Roles(Role.User)
@@ -68,15 +68,16 @@ export class HotelController {
   @Roles(Role.User)
   @ApiOperation({ summary: 'Get top-rated hotels' })
   @ResponseMessage('Top-rated hotels fetched successfully')
-  getTopRated() {
-    return this.hotelService.getTopRatedHotels();
+  getTopRated(@Request() req: RequestWithUser) {
+    return this.hotelService.getTopRatedHotels(req.user._id);
   }
 
   @Get('search')
-  @Public()
+  @Roles(Role.User)
   @ApiOperation({ summary: 'Search hotels by name' })
-  search(@Query('name') name: string) {
-    return this.hotelService.searchByName(name);
+  @ResponseMessage('Search hotels by name successfully')
+  search(@Query('name') name: string, @Request() req: RequestWithUser) {
+    return this.hotelService.searchByName(name, req.user._id);
   }
 
   @Get('by-name/:name')
