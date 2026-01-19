@@ -23,6 +23,7 @@ import { RolesGuard } from './modules/auth/roles.guard';
 import { NotificationModule } from './modules/notification/notification.module';
 import { LocationModule } from './modules/location/location.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
+import { AmenityModule } from './modules/amenity/amenity.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -77,6 +78,7 @@ import { FavoriteModule } from './modules/favorite/favorite.module';
     NotificationModule,
     LocationModule,
     FavoriteModule,
+    AmenityModule,
   ],
   controllers: [],
   providers: [

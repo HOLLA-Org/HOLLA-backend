@@ -66,4 +66,14 @@ export class CreateHotelDto {
   @IsOptional()
   @IsBoolean()
   isPopular?: boolean;
+
+  @ApiPropertyOptional({
+    example: [
+      '66c9f4c1a8e123456789abcd',
+      '66c9f4c1a8e123456789abce',
+    ],
+  })
+  @IsOptional()
+  @IsArray()
+  amenities?: string[];
 }

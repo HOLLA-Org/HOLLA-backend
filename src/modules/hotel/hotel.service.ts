@@ -37,6 +37,7 @@ export class HotelService {
           availableRooms: { $gt: 0 },
         },
       },
+      ...this.amenityLookupPipeline(),
       ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
@@ -50,6 +51,7 @@ export class HotelService {
         },
       },
       { $limit: 10 },
+      ...this.amenityLookupPipeline(),
       ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
@@ -120,6 +122,7 @@ export class HotelService {
       },
       { $sort: { distance: 1 } },
       { $limit: 5 },
+      ...this.amenityLookupPipeline(),
       ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
@@ -133,6 +136,7 @@ export class HotelService {
       },
       { $sort: { ratingCount: -1, rating: -1 } },
       { $limit: 10 },
+      ...this.amenityLookupPipeline(),
       ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
@@ -154,6 +158,7 @@ export class HotelService {
           availableRooms: { $gt: 0 },
         },
       },
+      ...this.amenityLookupPipeline(),
       ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
@@ -233,4 +238,24 @@ export class HotelService {
       },
     ];
   }
+
+  private amenityLookupPipeline() {
+  return [
+    {
+      $lookup: {
+        from: 'amenities',
+        localField: 'amenities',
+        foreignField: '_id',
+        as: 'amenities',
+      },
+    },
+    {
+      $project: {
+        'amenities.isActive': 0,
+        'amenities.createdAt': 0,
+        'amenities.updatedAt': 0,
+      },
+    },
+  ];
+}
 }
