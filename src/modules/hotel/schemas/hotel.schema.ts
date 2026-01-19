@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type HotelDocument = Hotel & Document;
 
@@ -41,6 +41,11 @@ export class Hotel {
   @Prop({ default: false })
   isPopular: boolean;
 
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Amenity' }],
+    default: [],
+  })
+  amenities: Types.ObjectId[];
 }
 
 export const HotelSchema = SchemaFactory.createForClass(Hotel);
