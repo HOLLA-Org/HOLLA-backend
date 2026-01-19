@@ -31,6 +31,16 @@ export class AmenityController {
     return this.amenityService.findAll();
   }
 
+  //  @ApiBearerAuth()
+  // @Roles(Role.Admin)
+  @Public()
+  @Get('all')
+  @ApiOperation({ summary: 'Get all amenities (include inactive) - admin' })
+  @ResponseMessage('Get all amenities successfully')
+  getAllIncludeInactive() {
+    return this.amenityService.findAllIncludeInactive();
+  }
+
   // @ApiBearerAuth()
   // @Roles(Role.Admin)
   @Public()

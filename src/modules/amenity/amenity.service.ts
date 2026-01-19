@@ -39,6 +39,14 @@ export class AmenityService {
       .lean();
   }
 
+  async findAllIncludeInactive() {
+  return this.amenityModel
+    .find()
+    .select('name icon isActive')
+    .sort({ createdAt: -1 })
+    .lean();
+}
+
   async findById(id: string) {
     const amenity = await this.amenityModel.findById(id);
     if (!amenity) {
