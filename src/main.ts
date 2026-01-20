@@ -25,11 +25,10 @@ async function bootstrap() {
     .setTitle('HoLLa API')
     .setDescription('API documentation for HoLLa project')
     .setVersion('1.0')
-    .addBearerAuth() // Optional: for JWT auth support
+    .addBearerAuth()
     .addTag('Authentication User', 'Authentication related endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Hotels', 'Hotel management endpoints')
-    .addTag('Rooms', 'Room management endpoints')
     .addTag('Bookings', 'Booking management endpoints')
     .addTag('Payments', 'Payment management endpoints')
     .addTag('Discounts', 'Discount management endpoints')
@@ -41,7 +40,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
-      // Dòng này sẽ ẩn mục "Schemas"
       defaultModelsExpandDepth: -1,
     },
   }); // http://localhost:PORT/api-docs

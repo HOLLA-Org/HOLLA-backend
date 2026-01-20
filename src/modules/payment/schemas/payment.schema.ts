@@ -1,3 +1,4 @@
+import { PaymentStatus } from '@/constant';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -12,13 +13,13 @@ export class Payment {
   booking_id: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Discount' })
-  discount_id: Types.ObjectId;
+  discount_id?: Types.ObjectId;
 
   @Prop({ required: true })
   payment_method: string;
 
-  @Prop({ required: true, default: 'Pending' })
-  booking_status: string;
+  @Prop({ required: true, enum: PaymentStatus, default: PaymentStatus.PENDING })
+  status: PaymentStatus;
 
   @Prop({ required: true })
   amount: number;

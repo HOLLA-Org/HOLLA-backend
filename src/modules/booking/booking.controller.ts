@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Req,
+  Query,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -72,5 +73,31 @@ export class BookingController {
   cancel(@Param('id') _id: string, @Req() req) {
     const user_id = req.user._id;
     return this.bookingService.cancelBooking(_id, user_id);
+  }
+
+  @Patch('admin/:id/cancel')
+  @Public()
+  @ApiOperation({ summary: '[Admin] Cancel a booking' })
+  @ApiResponse({ status: 200, description: 'Booking cancelled successfully.' })
+  @ResponseMessage('Booking cancelled successfully.')
+  adminCancel(@Param('id') id: string) {
+    return this.bookingService.adminCancelBooking(id);
+  }
+
+  @Get('history')
+  @ApiOperation({ summary: 'Get booking history' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return a users booking history.',
+  })
+  @ResponseMessage('Booking history retrieved successfully.')
+  getBookingHistory(
+    @Req() req,
+    @Query('status') status: BookingStatus,
+  ) {
+    return this.bookingService.getBookingHistory(
+      req.user.id,
+    status,
+    );
   }
 }

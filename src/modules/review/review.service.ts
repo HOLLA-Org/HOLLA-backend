@@ -1,79 +1,110 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
 import { User, UserDocument } from '../users/schemas/user.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Review, ReviewDocument } from './schemas/review.schema';
 import { Booking, BookingDocument } from '../booking/schemas/booking.shema';
 import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
 import { BookingStatus } from '@/constant';
-import { Room } from '../room/schemas/room.schema';
 
 @Injectable()
 export class ReviewService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
-    @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
-    @InjectModel(Hotel.name) private hotelModel: Model<HotelDocument>,
-    @InjectModel(Room.name) private roomModel: Model<Room>,
+    @InjectModel(Review.name)
+    private readonly reviewModel: Model<ReviewDocument>,
+
+    @InjectModel(Booking.name)
+    private readonly bookingModel: Model<BookingDocument>,
+
+    @InjectModel(Hotel.name)
+    private readonly hotelModel: Model<HotelDocument>,
   ) {}
+
   async create(
-    user_id: string,
+    user_id: Types.ObjectId,
     createReviewDto: CreateReviewDto,
   ): Promise<Review> {
-    const { booking_id } = createReviewDto;
+    const { booking_id, rating, comment } = createReviewDto;
 
     const booking = await this.bookingModel.findOne({
       _id: booking_id,
       user_id,
+      status: BookingStatus.COMPLETED,
     });
+
     if (!booking) {
-      throw new BadRequestException(`Booking not found for this user`);
+      throw new BadRequestException('Booking not found or not completed');
     }
 
-    const room = await this.roomModel.findById(booking.room_id);
-    if (!room) {
-      throw new BadRequestException(`Room not found for booking`);
+    let review: Review;
+    try {
+      review = await this.reviewModel.create({
+        user_id: user_id,
+        hotel_id: booking.hotel_id,
+        booking_id,
+        rating,
+        comment,
+      });
+    } catch (e) {
+      if (e.code === 11000) {
+        throw new BadRequestException(
+          'You already reviewed this booking',
+        );
+      }
+      throw e;
     }
 
-    const hotel = await this.hotelModel.findById(room.hotel_id);
-    if (!hotel) {
-      throw new BadRequestException(`Hotel not found for room`);
-    }
+    await this.hotelModel.findByIdAndUpdate(booking.hotel_id, [
+      {
+        $set: {
+          ratingCount: { $add: ['$ratingCount', 1] },
+          rating: {
+            $divide: [
+              {
+                $add: [
+                  { $multiply: ['$rating', '$ratingCount'] },
+                  rating,
+                ],
+              },
+              { $add: ['$ratingCount', 1] },
+            ],
+          },
+        },
+      },
+    ]);
 
-    if (booking.status !== BookingStatus.COMPLETED) {
-      throw new BadRequestException(`Booking is not completed, cannot review`);
-    }
-
-    const existingReview = await this.reviewModel.findOne({
-      user_id,
-      booking_id,
-    });
-    if (existingReview) {
-      throw new BadRequestException(`You already reviewed this booking`);
-    }
-
-    const newReview = new this.reviewModel({
-      user_id,
-      hotel_id: hotel._id,
-      booking_id,
-      ...createReviewDto,
-    });
-
-    return newReview.save();
+    return review;
   }
 
-  async findAllByHotel(hotel_id: string, user_id: string): Promise<Review[]> {
-    const reviews = await this.reviewModel
-      .find({ hotel_id })
-      .sort({ review_date: -1 });
-
-    return reviews.sort((a, b) => {
-      if (a.user_id.toString() === user_id) return -1;
-      if (b.user_id.toString() === user_id) return 1;
-      return 0;
-    });
+  async findAllByHotel(
+    hotel_id: Types.ObjectId,
+    user_id: Types.ObjectId,
+  ): Promise<Review[]> {
+    return this.reviewModel.aggregate([
+      {
+        $match: {
+          hotel_id: hotel_id,
+        },
+      },
+      {
+        $addFields: {
+          isMine: {
+            $eq: ['$user_id', user_id],
+          },
+        },
+      },
+      {
+        $sort: {
+          isMine: -1,
+          review_date: -1,
+        },
+      },
+      {
+        $project: {
+          isMine: 0,
+        },
+      },
+    ]);
   }
 }

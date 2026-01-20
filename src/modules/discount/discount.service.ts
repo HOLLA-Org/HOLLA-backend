@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateDiscountDto } from './dto/create-discount.dto';
 import { UpdateDiscountDto } from './dto/update-discount.dto';
 import { Discount, DiscountDocument } from './schemas/discount.schema';
-import { isValidObjectId, Model } from 'mongoose';
+import { isValidObjectId, Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -26,7 +26,7 @@ export class DiscountService {
   }
   async applyDiscount(
     code: string,
-    user_id: string,
+    user_id: Types.ObjectId,
   ): Promise<{ value: number }> {
     const existingUser = await this.userModel.findById(user_id);
     if (!existingUser) {
@@ -42,7 +42,7 @@ export class DiscountService {
       throw new BadRequestException('Discount expired');
     }
 
-    const used = discount.used_by.find((u) => u.user_id.toString() === user_id);
+    const used = discount.used_by.find((u) => u.user_id.toString() === user_id.toString());
 
     if (used) {
       if (used.used_count >= discount.max_usage) {
@@ -60,7 +60,7 @@ export class DiscountService {
         { _id: discount._id },
         {
           $push: {
-            used_by: { user_id, used_count: 1 },
+            used_by: { user_id: user_id, used_count: 1 },
           },
         },
       );

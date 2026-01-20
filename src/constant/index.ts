@@ -9,7 +9,6 @@ export const ROLES = {
 export enum BookingType {
   PER_HOUR = 'per_hour',
   PER_DAY = 'per_day',
-  OVERNIGHT = 'overnight',
 }
 
 export enum BookingStatus {
@@ -17,6 +16,11 @@ export enum BookingStatus {
   ACTIVE = 'active',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
 }
 
 export const DEFAULT_AVATAR_URL =
