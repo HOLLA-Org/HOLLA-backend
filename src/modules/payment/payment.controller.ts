@@ -3,14 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Req,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -38,7 +36,6 @@ export class PaymentController {
   }
 
   @Get()
-  // @Roles(Role.Admin)
   @Public()
   @ApiOperation({ summary: '[Admin] Get all payments' })
   @ApiResponse({
@@ -47,11 +44,10 @@ export class PaymentController {
   })
   @ResponseMessage('Payments retrieved successfully')
   getAll() {
-    return this.paymentService.getdAll();
+    return this.paymentService.getAll();
   }
 
   @Delete(':id')
-  // @Roles(Role.Admin)
   @Public()
   @ApiOperation({ summary: '[Admin] Delete a payment by id' })
   @ApiResponse({
@@ -59,7 +55,7 @@ export class PaymentController {
     description: 'The payment has been successfully deleted.',
   })
   @ResponseMessage('Payment deleted successfully')
-  delete(@Param('id') _id: string) {
-    return this.paymentService.remove(_id);
+  delete(@Param('id') id: string) {
+    return this.paymentService.remove(id);
   }
 }

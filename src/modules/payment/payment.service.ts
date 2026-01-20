@@ -1,113 +1,172 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, isValidObjectId, Types } from 'mongoose';
+
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { Payment, PaymentDocument } from './schemas/payment.schema';
 import { Booking, BookingDocument } from '../booking/schemas/booking.shema';
-import { isValidObjectId, Model } from 'mongoose';
-import { DiscountService } from '../discount/discount.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { Room, RoomDocument } from '../room/schemas/room.schema';
 import { BookingStatus } from '@/constant';
 import { User, UserDocument } from '../users/schemas/user.schema';
+import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
+import { Discount, DiscountDocument } from '../discount/schemas/discount.schema';
 
 @Injectable()
 export class PaymentService {
   constructor(
-    @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
-    @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
-    @InjectModel(Room.name) private roomModel: Model<RoomDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private readonly discountService: DiscountService,
+    @InjectModel(Payment.name)
+    private readonly paymentModel: Model<PaymentDocument>,
+
+    @InjectModel(Booking.name)
+    private readonly bookingModel: Model<BookingDocument>,
+
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+
+    @InjectModel(Hotel.name)
+    private readonly hotelModel: Model<HotelDocument>,
+
+    @InjectModel(Discount.name)
+    private readonly discountModel: Model<DiscountDocument>,
   ) {}
 
   async create(
-    user_id: string,
+    user_id: Types.ObjectId,
     createPaymentDto: CreatePaymentDto,
   ): Promise<Payment> {
     const { booking_id, payment_method, discount_code } = createPaymentDto;
 
     const user = await this.userModel.findById(user_id);
-    if (!user) {
-      throw new BadRequestException('User not found with id');
-    }
+    if (!user) throw new BadRequestException('User not found');
 
     const booking = await this.bookingModel.findById(booking_id);
-    if (!booking) {
-      throw new BadRequestException('Booking not found with id');
+    if (!booking) throw new BadRequestException('Booking not found');
+
+    if (booking.user_id.toString() !== user_id.toString()) {
+      throw new BadRequestException('You do not own this booking');
     }
 
-    const existingPayment = await this.paymentModel.findOne({
-      booking_id,
-      booking_status: 'Paid',
-    });
-
-    if (existingPayment) {
-      throw new BadRequestException('Payment already exists for booking');
-    }
-
-    if (booking.status === BookingStatus.ACTIVE) {
+    if (booking.status !== BookingStatus.PENDING) {
       throw new BadRequestException(
-        'Booking is already active and cannot be paid again',
+        `Booking cannot be paid with status "${booking.status}"`,
       );
     }
 
-    let discountValue = 0;
+    const paid = await this.paymentModel.findOne({
+      booking_id,
+      status: 'PAID',
+    });
+    if (paid) {
+      throw new BadRequestException('Payment already completed');
+    }
+
+    let finalAmount = booking.total_price;
+    let discountId: Types.ObjectId | undefined;
+
     if (discount_code) {
-      const { value } = await this.discountService.applyDiscount(
-        discount_code,
-        user_id,
-      );
-      discountValue = value;
-    }
+      const discount = await this.discountModel.findOne({
+        code: discount_code,
+      });
 
-    let finalAmount = booking.total_price * (1 - discountValue / 100);
-    if (finalAmount < 0) finalAmount = 0;
+      if (!discount) throw new BadRequestException('Discount not found');
 
-    let booking_status = 'Pending';
-    if (
-      ['CREDIT', 'ATM', 'MOMO', 'ZALOPAY', 'SHOPEEPAY'].includes(
-        payment_method.toUpperCase(),
-      )
-    ) {
-      booking_status = 'Paid';
-      booking.status = BookingStatus.ACTIVE;
-
-      if (booking.room_id) {
-        await this.roomModel.findByIdAndUpdate(booking.room_id, {
-          is_available: false,
-        });
+      if (discount.expires_at && discount.expires_at < new Date()) {
+        throw new BadRequestException('Discount expired');
       }
 
-      await booking.save();
+      const used = discount.used_by.find(
+        (u) => u.user_id.toString() === user_id.toString(),
+      );
+
+      if (used && used.used_count >= discount.max_usage) {
+        throw new BadRequestException(
+          'Discount usage limit reached',
+        );
+      }
+
+      if (used) {
+        await this.discountModel.updateOne(
+          { _id: discount._id, 'used_by.user_id': user_id },
+          { $inc: { 'used_by.$.used_count': 1 } },
+        );
+      } else {
+        await this.discountModel.updateOne(
+          { _id: discount._id },
+          { $push: { used_by: { user_id: user_id, used_count: 1 } } },
+        );
+      }
+
+      finalAmount = Math.max(
+        booking.total_price - discount.value,
+        0,
+      );
+      discountId = discount._id as Types.ObjectId;
     }
 
-    const payment = new this.paymentModel({
+    const isInstantPayment = [
+      'CREDIT',
+      'ATM',
+      'MOMO',
+      'ZALOPAY',
+      'SHOPEEPAY',
+    ].includes(payment_method.toUpperCase());
+
+    const paymentStatus: 'PAID' | 'PENDING' =
+      isInstantPayment ? 'PAID' : 'PENDING';
+
+
+    if (isInstantPayment) {
+      const roomUpdated = await this.hotelModel.findOneAndUpdate(
+        { _id: booking.hotel_id, availableRooms: { $gt: 0 } },
+        { $inc: { availableRooms: -1 } },
+      );
+
+      if (!roomUpdated) {
+        throw new BadRequestException('No available rooms');
+      }
+
+      const updatedBooking = await this.bookingModel.findOneAndUpdate(
+        { _id: booking_id, status: BookingStatus.PENDING },
+          {
+            status: BookingStatus.ACTIVE,
+            paid_amount: finalAmount,
+          },
+        { new: true },
+      );
+
+      if (!updatedBooking) {
+        await this.hotelModel.findByIdAndUpdate(booking.hotel_id, {
+          $inc: { availableRooms: 1 },
+        });
+        throw new BadRequestException('Booking already processed');
+      }
+    }
+
+  return this.paymentModel.create({
       user_id,
       booking_id,
-      discount_id: discount_code || null,
       payment_method,
-      booking_status,
+      discount_id: discountId,
       amount: finalAmount,
+      status: paymentStatus,
     });
-
-    return payment.save();
   }
 
-  async getdAll(): Promise<Payment[]> {
-    return this.paymentModel.find();
+  async getAll(): Promise<Payment[]> {
+    return this.paymentModel
+      .find()
+      .populate('user_id', 'username email')
+      .populate('booking_id')
+      .populate('discount_id', 'code value');
   }
 
-  async remove(_id: string) {
-    if (!isValidObjectId(_id)) {
-      throw new BadRequestException(`ID "${_id}" is not valid!`);
+  async remove(id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException(`ID "${id}" is not valid`);
     }
 
-    const hasPayment = await this.paymentModel.findById(_id);
+    const payment = await this.paymentModel.findById(id);
+    if (!payment) throw new BadRequestException('Payment not found');
 
-    if (!hasPayment) {
-      throw new BadRequestException('Payment not found!');
-    }
-
-    return hasPayment.deleteOne();
+    return payment.deleteOne();
   }
 }

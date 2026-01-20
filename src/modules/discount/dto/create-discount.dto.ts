@@ -46,7 +46,7 @@ export class CreateDiscountDto {
 
   @ApiProperty({
     description: 'The expiration date of the discount code',
-    example: '00:00 21/08',
+    example: '2026-08-21T00:00:00.000Z',
     required: false,
   })
   @ToDate()

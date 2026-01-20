@@ -3,15 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   Req,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
-
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -19,6 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ResponseMessage } from '@/decorator/customize';
+import { Types } from 'mongoose';
 
 @ApiTags('Reviews')
 @ApiBearerAuth()
@@ -47,6 +44,6 @@ export class ReviewController {
   @ResponseMessage('Reviews retrieved successfully')
   getAllByHotel(@Param('hotel_id') hotel_id: string, @Req() req) {
     const user_id = req.user._id;
-    return this.reviewService.findAllByHotel(hotel_id, user_id);
+    return this.reviewService.findAllByHotel(new Types.ObjectId(hotel_id), user_id);
   }
 }

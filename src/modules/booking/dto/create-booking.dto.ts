@@ -1,10 +1,12 @@
 // src/bookings/dto/create-booking.dto.ts
 import { BookingType } from '@/constant';
 import { ToDate } from '@/decorator/to-date.decorator';
+import { ToObjectId } from '@/decorator/to-object-id.decorator';
+import { IsObjectId } from '@/decorator/is-object-id.decorator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Types } from 'mongoose';
 import {
   IsNotEmpty,
-  IsMongoId,
   IsDateString,
   IsEnum,
   IsNumber,
@@ -14,16 +16,17 @@ import {
 
 export class CreateBookingDto {
   @ApiProperty({
-    description: 'ID of the room being booked',
+    description: 'ID of the hotel being booked',
     example: '64d3b1f9c3b4e5f6a7b8c9d0',
   })
   @IsNotEmpty()
-  @IsMongoId()
-  room_id: string;
+  @ToObjectId()
+  @IsObjectId()
+  hotel_id: Types.ObjectId;
 
   @ApiProperty({
     description: 'Check-in date and time',
-    example: '00:00 20/08',
+    example: '2024-08-20T00:00:00Z',
   })
   @ToDate()
   @IsDate()
@@ -31,7 +34,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     description: 'Check-out date and time',
-    example: '00:00 21/08',
+    example: '2024-08-21T00:00:00Z',
   })
   @ToDate()
   @IsDate()
@@ -44,9 +47,4 @@ export class CreateBookingDto {
   })
   @IsEnum(BookingType)
   booking_type: BookingType;
-
-  @ApiProperty({ description: 'Total price of the booking', example: 500000 })
-  @IsNumber()
-  @Min(0)
-  total_price: number;
 }

@@ -11,7 +11,6 @@ import { JwtAuthGuard } from './modules/auth/authUser/passport/jwt-auth.guard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { HotelModule } from './modules/hotel/hotel.module';
-import { RoomModule } from './modules/room/room.module';
 import { BookingModule } from './modules/booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -68,7 +67,6 @@ import { AmenityModule } from './modules/amenity/amenity.module';
     }),
 
     HotelModule,
-    RoomModule,
     BookingModule,
     PaymentModule,
     DiscountModule,

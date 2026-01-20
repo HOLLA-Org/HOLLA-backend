@@ -25,3 +25,5 @@ export class Review {
 }
 
 export const ReviewSchema = SchemaFactory.createForClass(Review);
+
+ReviewSchema.index({ booking_id: 1, user_id: 1 }, { unique: true });

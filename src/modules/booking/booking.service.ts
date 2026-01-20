@@ -1,84 +1,182 @@
 import { User, UserDocument } from '@/modules/users/schemas/user.schema';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto } from './dto/update-booking.dto';
 import { Booking, BookingDocument } from './schemas/booking.shema';
 import { BookingStatus } from '@/constant';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Room, RoomDocument } from '../room/schemas/room.schema';
+import { Model, Types } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
 
 @Injectable()
 export class BookingService {
   constructor(
-    @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
-    @InjectModel(Room.name) private roomModel: Model<RoomDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Booking.name)
+    private readonly bookingModel: Model<BookingDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+    @InjectModel(Hotel.name)
+    private readonly hotelModel: Model<HotelDocument>,
   ) {}
-  async create(payload: {
+
+  async create({
+    createBookingDto,
+    user_id,
+  }: {
     createBookingDto: CreateBookingDto;
-    user_id: string;
+    user_id: Types.ObjectId;
   }): Promise<Booking> {
-    const { createBookingDto, user_id } = payload;
-    const { room_id, check_in, check_out } = createBookingDto;
+    const {
+      hotel_id,
+      check_in,
+      check_out,
+      booking_type,
+    } = createBookingDto;
 
-    const existingUser = await this.userModel.findById(user_id);
-    if (!existingUser) {
-      throw new BadRequestException(`Not found user with id ${user_id}`);
+    if (check_in >= check_out) {
+      throw new BadRequestException('Check-out must be after check-in');
     }
 
-    const existingRoom = await this.roomModel.findById(room_id);
-    if (!existingRoom) {
-      throw new BadRequestException(`Not found room with id ${room_id}`);
+    const user = await this.userModel.findById(user_id);
+    if (!user) throw new BadRequestException('User not found');
+
+    const hotel = await this.hotelModel.findById(hotel_id);
+    if (!hotel) throw new BadRequestException('Hotel not found');
+
+    if (hotel.availableRooms <= 0) {
+      throw new BadRequestException('No available rooms');
     }
 
-    const existingBooking = await this.bookingModel
-      .findOne({
-        room_id,
-        status: { $ne: BookingStatus.CANCELLED },
-        $or: [
-          { check_in: { $lt: check_out, $gte: check_in } },
-          { check_out: { $gt: check_in, $lte: check_out } },
-        ],
-      })
-      .exec();
+    const diffMs = check_out.getTime() - check_in.getTime();
+    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.ceil(diffHours / 24);
 
-    if (existingBooking) {
-      throw new BadRequestException(
-        'This room is already booked for the selected time range.',
-      );
+    let totalPrice = 0;
+
+    if (booking_type === 'per_hour') {
+      if (!hotel.priceHour || hotel.priceHour <= 0) {
+        throw new BadRequestException('Hotel hourly price not configured');
+      }
+      totalPrice = diffHours * hotel.priceHour;
+    } else {
+      if (!hotel.priceDay || hotel.priceDay <= 0) {
+        throw new BadRequestException('Hotel daily price not configured');
+      }
+      totalPrice = diffDays * hotel.priceDay;
     }
 
-    const newBooking = new this.bookingModel({
-      user_id,
-      ...createBookingDto,
-      status: BookingStatus.PENDING,
+    const conflict = await this.bookingModel.findOne({
+      hotel_id: hotel_id,
+      status: { $in: [BookingStatus.PENDING, BookingStatus.ACTIVE] },
+      check_in: { $lt: check_out },
+      check_out: { $gt: check_in },
     });
 
-    return newBooking.save();
+    if (conflict) {
+      throw new BadRequestException('Hotel is fully booked');
+    }
+
+    return this.bookingModel.create({
+      user_id: user_id,
+      hotel_id: hotel_id,
+      check_in,
+      check_out,
+      booking_type,
+      total_price: totalPrice,
+      status: BookingStatus.PENDING,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
   }
 
-  async confirmBooking(_id: string): Promise<Booking> {
-    const booking = await this.bookingModel.findById(_id);
-    if (!booking) {
-      throw new BadRequestException(`Not found booking with id ${_id}`);
-    }
+  async confirmBooking(id: string): Promise<Booking> {
+    const bookingObjectId = new Types.ObjectId(id);
+
+    const booking = await this.bookingModel.findById(bookingObjectId);
+    if (!booking) throw new BadRequestException('Booking not found');
 
     if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException(
-        `Booking is not in a pending state. Current status: ${booking.status}`,
-      );
+      throw new BadRequestException('Booking is not pending');
     }
+
+    if (booking.expires_at < new Date()) {
+      throw new BadRequestException('Booking expired');
+    }
+
+    const updated = await this.hotelModel.findOneAndUpdate(
+      { _id: booking.hotel_id, availableRooms: { $gt: 0 } },
+      { $inc: { availableRooms: -1 } },
+    );
+
+    if (!updated) throw new BadRequestException('No available rooms');
 
     booking.status = BookingStatus.ACTIVE;
+    return booking.save();
+  }
 
-    if (booking.room_id) {
-      await this.roomModel.findByIdAndUpdate(booking.room_id, {
-        is_available: false,
+  @Cron(CronExpression.EVERY_HOUR)
+  async completeBookings() {
+    await this.bookingModel.updateMany(
+      {
+        status: BookingStatus.ACTIVE,
+        check_out: { $lte: new Date() },
+      },
+      { status: BookingStatus.COMPLETED },
+    );
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async cancelExpiredPendingBookings() {
+    await this.bookingModel.updateMany(
+      {
+        status: BookingStatus.PENDING,
+        expires_at: { $lte: new Date() },
+      },
+      { status: BookingStatus.CANCELLED },
+    );
+  }
+
+  async cancelBooking(id: string, user_id: Types.ObjectId): Promise<Booking> {
+    const bookingObjectId = new Types.ObjectId(id);
+
+    const booking = await this.bookingModel.findById(bookingObjectId);
+    if (!booking) throw new BadRequestException('Booking not found');
+
+    if (!booking.user_id.equals(user_id)) {
+      throw new BadRequestException('Not owner');
+    }
+
+    if (![BookingStatus.PENDING, BookingStatus.ACTIVE].includes(booking.status)) {
+      throw new BadRequestException('Cannot cancel');
+    }
+
+    if (booking.status === BookingStatus.ACTIVE) {
+      await this.hotelModel.findByIdAndUpdate(booking.hotel_id, {
+        $inc: { availableRooms: 1 },
       });
     }
-    return await booking.save();
+
+    booking.status = BookingStatus.CANCELLED;
+    return booking.save();
+  }
+
+  async adminCancelBooking(id: string): Promise<Booking> {
+    const bookingObjectId = new Types.ObjectId(id);
+
+    const booking = await this.bookingModel.findById(bookingObjectId);
+    if (!booking) throw new BadRequestException('Booking not found');
+
+    if (![BookingStatus.PENDING, BookingStatus.ACTIVE].includes(booking.status)) {
+      throw new BadRequestException('Cannot cancel');
+    }
+
+    if (booking.status === BookingStatus.ACTIVE) {
+      await this.hotelModel.findByIdAndUpdate(booking.hotel_id, {
+        $inc: { availableRooms: 1 },
+      });
+    }
+
+    booking.status = BookingStatus.CANCELLED;
+    return booking.save();
   }
 
   async getAll(): Promise<Booking[]> {
@@ -86,69 +184,36 @@ export class BookingService {
       .find()
       .sort({ booked_at: -1 })
       .populate('user_id', 'username email')
-      .populate({
-        path: 'room_id',
-        select: 'name type hotel_id',
-        populate: {
-          path: 'hotel_id',
-          select: 'name address rating',
-        },
-      });
+      .populate('hotel_id', 'name address rating images');
   }
 
-  async getAllByStatus(
-    user_id: string,
-    status: BookingStatus,
-  ): Promise<Booking[]> {
+  async getAllByStatus(user_id: Types.ObjectId, status: BookingStatus) {
     return this.bookingModel
-      .find({
-        user_id: user_id,
-        status: status,
-      })
-      .populate('room_id');
+      .find({ user_id: user_id, status })
+      .sort({ booked_at: -1 })
+      .populate('hotel_id', 'name address rating images');
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
-  async changeStatusBookings() {
-    const findConditions = {
-      status: BookingStatus.ACTIVE,
-      check_out: { $lte: new Date() },
-    };
-
-    const updateData = {
-      status: BookingStatus.COMPLETED,
-    };
-
-    return await this.bookingModel.updateMany(findConditions, updateData);
-  }
-
-  async cancelBooking(_id: string, user_id: string): Promise<Booking> {
-    const booking = await this.bookingModel.findById(_id);
-    if (!booking) {
-      throw new BadRequestException(`Not found booking with id ${_id}`);
+  async getBookingHistory(user_id: Types.ObjectId, status: BookingStatus) {
+    if (!Object.values(BookingStatus).includes(status)) {
+      throw new BadRequestException('Invalid booking status');
     }
 
-    const existingUser = await this.userModel.findById(user_id);
-    if (!existingUser) {
-      throw new BadRequestException(`Not found user with id ${user_id}`);
-    }
+    const bookings = await this.bookingModel
+      .find({ user_id: user_id, status })
+      .populate('hotel_id')
+      .sort({ booked_at: -1 })
+      .lean();
 
-    if (
-      ![BookingStatus.PENDING, BookingStatus.ACTIVE].includes(booking.status)
-    ) {
-      throw new BadRequestException(
-        `Cannot cancel a booking with status "${booking.status}"`,
-      );
-    }
-
-    if (booking.room_id && booking.status === BookingStatus.ACTIVE) {
-      await this.roomModel.findByIdAndUpdate(booking.room_id, {
-        is_available: true,
-      });
-    }
-
-    booking.status = BookingStatus.CANCELLED;
-
-    return await booking.save();
+    return bookings
+      .filter(b => b.hotel_id)
+      .map(b => ({
+        ...b.hotel_id,
+        bookingId: b._id,
+        bookingStatus: b.status,
+        check_in: b.check_in,
+        check_out: b.check_out,
+        price: b.paid_amount ?? b.total_price,
+      }));
   }
 }

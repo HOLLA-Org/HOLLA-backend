@@ -8,20 +8,17 @@ import {
   Min,
 } from 'class-validator';
 import { Types } from 'mongoose';
+import { ToObjectId } from '@/decorator/to-object-id.decorator';
+import { IsObjectId } from '@/decorator/is-object-id.decorator';
 
 export class CreateReviewDto {
-  @ApiProperty({
-    description: 'Hotel id being reviewed',
-    example: '64e8c9f9a2b3c4d5e6f7a8b9',
-  })
-  @IsNotEmpty()
-  hotel_id: Types.ObjectId;
-
   @ApiProperty({
     description: 'Booking id associated with the review',
     example: '64e8c9f9a2b3c4d5e6f7a8b9',
   })
   @IsNotEmpty()
+  @ToObjectId()
+  @IsObjectId()
   booking_id: Types.ObjectId;
 
   @ApiProperty({
