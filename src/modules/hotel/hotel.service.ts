@@ -56,6 +56,28 @@ export class HotelService {
     ]);
   }
 
+  async getHotelById(hotelId: string, userId?: Types.ObjectId) {
+    if (!isValidObjectId(hotelId)) {
+      throw new BadRequestException(`ID "${hotelId}" is not valid`);
+    }
+
+    const result = await this.hotelModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(hotelId),
+        },
+      },
+      ...this.amenityLookupPipeline(),
+      ...this.favoriteLookupPipeline(userId?.toString()),
+    ]);
+
+    if (!result || result.length === 0) {
+      throw new BadRequestException('Hotel not found');
+    }
+
+    return result[0];
+  }
+
   async getRecommendedHotelsNearUser(userId?: Types.ObjectId) {
     const user = await this.userModel.findById(userId).lean();
 
@@ -198,6 +220,15 @@ export class HotelService {
   }
 
   private favoriteLookupPipeline(userId?: string) {
+    if (!userId) {
+      return [
+        {
+          $addFields: {
+            isFavorite: false,
+          },
+        },
+      ];
+    }
     return [
       {
         $lookup: {
@@ -213,12 +244,12 @@ export class HotelService {
                   $and: [
                     {
                       $eq: [
-                        { $toObjectId: '$hotelId' },
-                        '$$hotelId',
+                        { $toString: '$hotelId' },
+                        { $toString: '$$hotelId' },
                       ],
                     },
                     {
-                      $eq: ['$userId', '$$userId'],
+                      $eq: [{ $toString: '$userId' }, '$$userId'],
                     },
                   ],
                 },
@@ -241,6 +272,17 @@ export class HotelService {
 
   private amenityLookupPipeline() {
   return [
+    {
+      $addFields: {
+        amenities: {
+          $map: {
+            input: '$amenities',
+            as: 'amenityId',
+            in: { $toObjectId: '$$amenityId' },
+          },
+        },
+      },
+    },
     {
       $lookup: {
         from: 'amenities',
