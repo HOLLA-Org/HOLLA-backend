@@ -36,7 +36,6 @@ export class ReviewService {
     if (!booking) {
       throw new BadRequestException('Booking not found or not completed');
     }
-
     let review: Review;
     try {
       review = await this.reviewModel.create({
@@ -60,14 +59,19 @@ export class ReviewService {
         $set: {
           ratingCount: { $add: ['$ratingCount', 1] },
           rating: {
-            $divide: [
+            $round: [
               {
-                $add: [
-                  { $multiply: ['$rating', '$ratingCount'] },
-                  rating,
+                $divide: [
+                  {
+                    $add: [
+                      { $multiply: ['$rating', '$ratingCount'] },
+                      rating,
+                    ],
+                  },
+                  { $add: ['$ratingCount', 1] },
                 ],
               },
-              { $add: ['$ratingCount', 1] },
+              1,
             ],
           },
         },
@@ -80,11 +84,38 @@ export class ReviewService {
   async findAllByHotel(
     hotel_id: Types.ObjectId,
     user_id: Types.ObjectId,
-  ): Promise<Review[]> {
+  ): Promise<any[]> {
     return this.reviewModel.aggregate([
       {
         $match: {
           hotel_id: hotel_id,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: { uid: '$user_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$_id', '$$uid'] },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                avatarUrl: 1,
+              },
+            },
+          ],
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
@@ -103,6 +134,10 @@ export class ReviewService {
       {
         $project: {
           isMine: 0,
+          user_id: 0,
+          booking_id: 0,
+          hotel_id: 0,
+          __v: 0,
         },
       },
     ]);

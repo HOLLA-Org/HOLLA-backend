@@ -88,6 +88,15 @@ export class HotelController {
   findByName(@Param('name') name: string) {
     return this.hotelService.findOneByName({ name });
   }
+
+  @Get('detail/:id')
+  @Roles(Role.User)
+  @ApiOperation({ summary: 'Get hotel details by ID' })
+  @ApiParam({ name: 'id', description: 'Hotel ID' })
+  @ResponseMessage('Get hotel details successfully')
+  getHotelById(@Param('id') id: string, @Request() req: RequestWithUser) {
+    return this.hotelService.getHotelById(id, req.user._id);
+  }
   
 
   @Patch(':id')
