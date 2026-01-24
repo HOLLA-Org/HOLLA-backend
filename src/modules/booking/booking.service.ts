@@ -17,7 +17,7 @@ export class BookingService {
     private readonly userModel: Model<UserDocument>,
     @InjectModel(Hotel.name)
     private readonly hotelModel: Model<HotelDocument>,
-  ) {}
+  ) { }
 
   async create({
     createBookingDto,
@@ -65,18 +65,18 @@ export class BookingService {
       totalPrice = diffDays * hotel.priceDay;
     }
 
-    const conflict = await this.bookingModel.findOne({
+    const totalBookedInPeriod = await this.bookingModel.countDocuments({
       hotel_id: hotel_id,
       status: { $in: [BookingStatus.PENDING, BookingStatus.ACTIVE] },
       check_in: { $lt: check_out },
       check_out: { $gt: check_in },
     });
 
-    if (conflict) {
-      throw new BadRequestException('Hotel is fully booked');
+    if (totalBookedInPeriod >= hotel.availableRooms) {
+      throw new BadRequestException('Hotel is fully booked for this period');
     }
 
-    return this.bookingModel.create({
+    const booking = await this.bookingModel.create({
       user_id: user_id,
       hotel_id: hotel_id,
       check_in,
@@ -86,6 +86,8 @@ export class BookingService {
       status: BookingStatus.PENDING,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
+
+    return booking;
   }
 
   async confirmBooking(id: string): Promise<Booking> {
@@ -115,13 +117,20 @@ export class BookingService {
 
   @Cron(CronExpression.EVERY_HOUR)
   async completeBookings() {
-    await this.bookingModel.updateMany(
-      {
-        status: BookingStatus.ACTIVE,
-        check_out: { $lte: new Date() },
-      },
-      { status: BookingStatus.COMPLETED },
-    );
+    const expiredBookings = await this.bookingModel.find({
+      status: BookingStatus.ACTIVE,
+      check_out: { $lte: new Date() },
+    });
+
+    for (const booking of expiredBookings) {
+      booking.status = BookingStatus.COMPLETED;
+      await booking.save();
+
+      // Release the room back to the hotel
+      await this.hotelModel.findByIdAndUpdate(booking.hotel_id, {
+        $inc: { availableRooms: 1 },
+      });
+    }
   }
 
   @Cron(CronExpression.EVERY_HOUR)

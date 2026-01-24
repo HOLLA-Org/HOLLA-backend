@@ -27,7 +27,7 @@ export class PaymentService {
 
     @InjectModel(Discount.name)
     private readonly discountModel: Model<DiscountDocument>,
-  ) {}
+  ) { }
 
   async create(
     user_id: Types.ObjectId,
@@ -95,10 +95,8 @@ export class PaymentService {
         );
       }
 
-      finalAmount = Math.max(
-        booking.total_price - discount.value,
-        0,
-      );
+      const discountAmount = (booking.total_price * discount.value) / 100;
+      finalAmount = Math.max(booking.total_price - discountAmount, 0);
       discountId = discount._id as Types.ObjectId;
     }
 
@@ -126,10 +124,10 @@ export class PaymentService {
 
       const updatedBooking = await this.bookingModel.findOneAndUpdate(
         { _id: booking_id, status: BookingStatus.PENDING },
-          {
-            status: BookingStatus.ACTIVE,
-            paid_amount: finalAmount,
-          },
+        {
+          status: BookingStatus.ACTIVE,
+          paid_amount: finalAmount,
+        },
         { new: true },
       );
 
@@ -141,7 +139,7 @@ export class PaymentService {
       }
     }
 
-  return this.paymentModel.create({
+    return this.paymentModel.create({
       user_id,
       booking_id,
       payment_method,
