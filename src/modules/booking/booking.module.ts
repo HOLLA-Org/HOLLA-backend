@@ -7,6 +7,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
 import { Hotel, HotelSchema } from '../hotel/schemas/hotel.schema';
 import { Review, ReviewSchema } from '../review/schemas/review.schema';
 import { Payment, PaymentSchema } from '../payment/schemas/payment.schema';
+import { NotificationModule } from '../notification/notification.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -16,6 +17,7 @@ import { Payment, PaymentSchema } from '../payment/schemas/payment.schema';
       { name: Review.name, schema: ReviewSchema },
       { name: Payment.name, schema: PaymentSchema },
     ]),
+    NotificationModule,
   ],
   controllers: [BookingController],
   providers: [BookingService],
