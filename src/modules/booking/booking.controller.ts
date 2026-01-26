@@ -17,6 +17,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ResponseMessage, Public } from '@/decorator/customize';
 import { BookingStatus } from '@/constant';
@@ -24,7 +25,7 @@ import { BookingStatus } from '@/constant';
 @ApiBearerAuth()
 @Controller('bookings')
 export class BookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(private readonly bookingService: BookingService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new booking' })
@@ -91,13 +92,24 @@ export class BookingController {
     description: 'Return a users booking history.',
   })
   @ResponseMessage('Booking history retrieved successfully.')
+  @ApiQuery({
+    name: 'tab',
+    required: true,
+    enum: ['pending', 'active', 'completed', 'cancelled'],
+    description: 'Filter bookings by status tab',
+  })
   getBookingHistory(
     @Req() req,
-    @Query('status') status: BookingStatus,
+    @Query('tab') tab: string,
   ) {
+    let status = BookingStatus.PENDING;
+    if (tab === 'active') status = BookingStatus.ACTIVE;
+    else if (tab === 'completed') status = BookingStatus.COMPLETED;
+    else if (tab === 'cancelled') status = BookingStatus.CANCELLED;
+
     return this.bookingService.getBookingHistory(
-      req.user.id,
-    status,
+      req.user._id,
+      status,
     );
   }
 }
