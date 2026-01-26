@@ -8,6 +8,7 @@ import { DiscountModule } from '../discount/discount.module';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { Hotel, HotelSchema } from '../hotel/schemas/hotel.schema';
 import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -19,9 +20,10 @@ import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
       { name: Discount.name, schema: DiscountSchema },
     ]),
     DiscountModule,
+    NotificationModule,
   ],
   controllers: [PaymentController],
   providers: [PaymentService],
   exports: [PaymentService],
 })
-export class PaymentModule {}
+export class PaymentModule { }

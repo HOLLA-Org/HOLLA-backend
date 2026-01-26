@@ -9,6 +9,7 @@ import { BookingStatus } from '@/constant';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
 import { Discount, DiscountDocument } from '../discount/schemas/discount.schema';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class PaymentService {
@@ -27,6 +28,7 @@ export class PaymentService {
 
     @InjectModel(Discount.name)
     private readonly discountModel: Model<DiscountDocument>,
+    private readonly notificationService: NotificationService,
   ) { }
 
   async create(
@@ -40,6 +42,9 @@ export class PaymentService {
 
     const booking = await this.bookingModel.findById(booking_id);
     if (!booking) throw new BadRequestException('Booking not found');
+
+    const hotel = await this.hotelModel.findById(booking.hotel_id);
+    if (!hotel) throw new BadRequestException('Hotel not found');
 
     if (booking.user_id.toString() !== user_id.toString()) {
       throw new BadRequestException('You do not own this booking');
@@ -137,6 +142,12 @@ export class PaymentService {
         });
         throw new BadRequestException('Booking already processed');
       }
+
+      await this.notificationService.create(user_id, {
+        title: 'Thanh toán thành công',
+        content: `Thanh toán của bạn cho đơn đặt phòng tại ${hotel.name} đã hoàn tất.`,
+        type: 'order',
+      });
     }
 
     return this.paymentModel.create({

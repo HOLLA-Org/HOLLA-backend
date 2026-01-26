@@ -10,6 +10,7 @@ import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
 import { Review, ReviewDocument } from '../review/schemas/review.schema';
 import { Payment, PaymentDocument } from '../payment/schemas/payment.schema';
 import { PaymentStatus } from '@/constant';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class BookingService {
@@ -24,6 +25,7 @@ export class BookingService {
     private readonly reviewModel: Model<ReviewDocument>,
     @InjectModel(Payment.name)
     private readonly paymentModel: Model<PaymentDocument>,
+    private readonly notificationService: NotificationService,
   ) { }
 
   async create({
@@ -130,7 +132,15 @@ export class BookingService {
     }
 
     booking.status = BookingStatus.ACTIVE;
-    return booking.save();
+    const result = await booking.save();
+
+    await this.notificationService.create(booking.user_id, {
+      title: 'Đặt phòng thành công',
+      content: `Đặt phòng tại ${updated.name} thành công.`,
+      type: 'order',
+    });
+
+    return result;
   }
 
   @Cron(CronExpression.EVERY_HOUR)

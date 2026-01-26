@@ -10,13 +10,15 @@ import { User } from '../users/schemas/user.schema';
 import { MediaService } from '../media/media.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { comparePassword, hashPassword } from '@/helpers';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ProfileService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly mediaService: MediaService,
-  ) {}
+    private readonly notificationService: NotificationService,
+  ) { }
 
   async getFullProfile(user_id: Types.ObjectId) {
     return this.userModel
@@ -107,7 +109,7 @@ export class ProfileService {
     const user = await this.userModel.findById(user_id);
     if (!user) {
       throw new NotFoundException('User not found');
-    } 
+    }
 
     const avatarUrl = await this.mediaService.uploadImage(file, {
       folder: `users/${user_id}/avatars`,
@@ -125,40 +127,46 @@ export class ProfileService {
         avatarUrl: user.avatarUrl,
       },
     };
-  } 
+  }
 
   async changePassword(
-  user_id: Types.ObjectId,
-  dto: ChangePasswordDto,
-) {
-  const user = await this.userModel.findById(user_id).select('password');
+    user_id: Types.ObjectId,
+    dto: ChangePasswordDto,
+  ) {
+    const user = await this.userModel.findById(user_id).select('password');
 
-  if (!user) {
-    throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { password, new_password } = dto;
+
+    const isMatch = await comparePassword(password, user.password);
+
+    if (!isMatch) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const isSamePassword = await comparePassword(new_password, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from old password',
+      );
+    }
+
+    const hashedPassword = await hashPassword(new_password);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    await this.notificationService.create(user_id, {
+      title: 'Mật khẩu đã được thay đổi',
+      content: 'Bạn đã thay đổi mật khẩu thành công.',
+      type: 'system',
+    });
+
+    return {
+      message: 'Change password successfully',
+    };
   }
-
-  const { password, new_password } = dto;
-
-  const isMatch = await comparePassword(password, user.password);
-
-  if (!isMatch) {
-    throw new BadRequestException('Current password is incorrect');
-  }
-
-  const isSamePassword = await comparePassword(new_password, user.password);
-  if (isSamePassword) {
-    throw new BadRequestException(
-      'New password must be different from old password',
-    );
-  }
-
-  const hashedPassword = await hashPassword(new_password);
-
-  user.password = hashedPassword;
-  await user.save();
-
-  return {
-    message: 'Change password successfully',
-  };
-}
 }
