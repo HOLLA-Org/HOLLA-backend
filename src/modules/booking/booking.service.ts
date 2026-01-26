@@ -7,6 +7,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Hotel, HotelDocument } from '../hotel/schemas/hotel.schema';
+import { Review, ReviewDocument } from '../review/schemas/review.schema';
+import { Payment, PaymentDocument } from '../payment/schemas/payment.schema';
+import { PaymentStatus } from '@/constant';
 
 @Injectable()
 export class BookingService {
@@ -17,6 +20,10 @@ export class BookingService {
     private readonly userModel: Model<UserDocument>,
     @InjectModel(Hotel.name)
     private readonly hotelModel: Model<HotelDocument>,
+    @InjectModel(Review.name)
+    private readonly reviewModel: Model<ReviewDocument>,
+    @InjectModel(Payment.name)
+    private readonly paymentModel: Model<PaymentDocument>,
   ) { }
 
   async create({
@@ -110,6 +117,17 @@ export class BookingService {
     );
 
     if (!updated) throw new BadRequestException('No available rooms');
+
+    const payment = await this.paymentModel.findOne({
+      booking_id: bookingObjectId,
+      status: PaymentStatus.PENDING,
+    });
+
+    if (payment) {
+      booking.paid_amount = payment.amount;
+      payment.status = PaymentStatus.PAID;
+      await payment.save();
+    }
 
     booking.status = BookingStatus.ACTIVE;
     return booking.save();
@@ -214,15 +232,32 @@ export class BookingService {
       .sort({ booked_at: -1 })
       .lean();
 
+    const bookingIds = bookings.map(b => b._id);
+    const reviews = await this.reviewModel.find({
+      booking_id: { $in: bookingIds },
+      user_id: user_id,
+    });
+
+    const payments = await this.paymentModel.find({
+      booking_id: { $in: bookingIds },
+    });
+    const paymentMap = new Map(payments.map(p => [p.booking_id.toString(), p.amount]));
+
+    const reviewedBookingIds = new Set(reviews.map(r => r.booking_id.toString()));
+
     return bookings
       .filter(b => b.hotel_id)
-      .map(b => ({
-        ...b.hotel_id,
-        bookingId: b._id,
-        bookingStatus: b.status,
-        check_in: b.check_in,
-        check_out: b.check_out,
-        price: b.paid_amount ?? b.total_price,
-      }));
+      .map(b => {
+        const hotel = b.hotel_id as any;
+        return {
+          ...hotel,
+          bookingId: b._id,
+          bookingStatus: b.status,
+          check_in: b.check_in,
+          check_out: b.check_out,
+          price: b.paid_amount ?? paymentMap.get(b._id.toString()) ?? b.total_price,
+          isReviewed: reviewedBookingIds.has(b._id.toString()),
+        };
+      });
   }
 }
