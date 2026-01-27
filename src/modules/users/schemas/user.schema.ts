@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { DEFAULT_AVATAR_URL, ROLES } from '@/constant';
+import { DEFAULT_AVATAR_URL, ROLES } from '../../../constant';
 import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
@@ -19,6 +19,9 @@ export class User {
 
   @Prop({ default: '' })
   address: string;
+
+  @Prop({ default: '' })
+  locationName: string;
 
   @Prop({ type: Number, default: null })
   latitude: number | null;
@@ -44,7 +47,7 @@ export class User {
 
   @Prop({ default: false })
   isActive: boolean;
-  
+
   @Prop()
   codeId: string;
   @Prop()

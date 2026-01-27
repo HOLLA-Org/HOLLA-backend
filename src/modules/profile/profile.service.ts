@@ -16,17 +16,20 @@ export class ProfileService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly mediaService: MediaService,
-  ) {}
+  ) { }
 
   async getFullProfile(user_id: Types.ObjectId) {
     return this.userModel
       .findById(user_id)
-      .select('username email phone address latitude longitude avatarUrl gender date_of_birth')
+      .select('username email phone address locationName latitude longitude avatarUrl gender date_of_birth')
       .lean();
   }
 
   async updateProfile(user_id: Types.ObjectId, dto: UpdateProfileDto) {
     const updateData: Partial<UpdateProfileDto> = {};
+
+    // Update location fields
+    if (dto.locationName) updateData.locationName = dto.locationName;
 
     // Update username
     if (dto.username && dto.username.trim() !== '') {
@@ -107,7 +110,7 @@ export class ProfileService {
     const user = await this.userModel.findById(user_id);
     if (!user) {
       throw new NotFoundException('User not found');
-    } 
+    }
 
     const avatarUrl = await this.mediaService.uploadImage(file, {
       folder: `users/${user_id}/avatars`,
@@ -125,40 +128,40 @@ export class ProfileService {
         avatarUrl: user.avatarUrl,
       },
     };
-  } 
+  }
 
   async changePassword(
-  user_id: Types.ObjectId,
-  dto: ChangePasswordDto,
-) {
-  const user = await this.userModel.findById(user_id).select('password');
+    user_id: Types.ObjectId,
+    dto: ChangePasswordDto,
+  ) {
+    const user = await this.userModel.findById(user_id).select('password');
 
-  if (!user) {
-    throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { password, new_password } = dto;
+
+    const isMatch = await comparePassword(password, user.password);
+
+    if (!isMatch) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const isSamePassword = await comparePassword(new_password, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from old password',
+      );
+    }
+
+    const hashedPassword = await hashPassword(new_password);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    return {
+      message: 'Change password successfully',
+    };
   }
-
-  const { password, new_password } = dto;
-
-  const isMatch = await comparePassword(password, user.password);
-
-  if (!isMatch) {
-    throw new BadRequestException('Current password is incorrect');
-  }
-
-  const isSamePassword = await comparePassword(new_password, user.password);
-  if (isSamePassword) {
-    throw new BadRequestException(
-      'New password must be different from old password',
-    );
-  }
-
-  const hashedPassword = await hashPassword(new_password);
-
-  user.password = hashedPassword;
-  await user.save();
-
-  return {
-    message: 'Change password successfully',
-  };
-}
 }
