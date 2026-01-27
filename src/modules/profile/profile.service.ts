@@ -17,18 +17,20 @@ export class ProfileService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly mediaService: MediaService,
-    private readonly notificationService: NotificationService,
   ) { }
 
   async getFullProfile(user_id: Types.ObjectId) {
     return this.userModel
       .findById(user_id)
-      .select('username email phone address latitude longitude avatarUrl gender date_of_birth')
+      .select('username email phone address locationName latitude longitude avatarUrl gender date_of_birth')
       .lean();
   }
 
   async updateProfile(user_id: Types.ObjectId, dto: UpdateProfileDto) {
     const updateData: Partial<UpdateProfileDto> = {};
+
+    // Update location fields
+    if (dto.locationName) updateData.locationName = dto.locationName;
 
     // Update username
     if (dto.username && dto.username.trim() !== '') {
@@ -158,12 +160,6 @@ export class ProfileService {
 
     user.password = hashedPassword;
     await user.save();
-
-    await this.notificationService.create(user_id, {
-      title: 'Mật khẩu đã được thay đổi',
-      content: 'Bạn đã thay đổi mật khẩu thành công.',
-      type: 'system',
-    });
 
     return {
       message: 'Change password successfully',

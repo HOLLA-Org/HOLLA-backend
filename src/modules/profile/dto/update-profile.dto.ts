@@ -36,11 +36,16 @@ export class UpdateProfileDto {
   @IsString()
   address?: string;
 
+  @ApiPropertyOptional({ example: 'Hà Nội' })
+  @IsOptional()
+  @IsString()
+  locationName?: string;
+
   @ApiPropertyOptional({ example: 10.776889 })
   @IsOptional()
   @IsNumber()
   latitude?: number;
-  
+
   @ApiPropertyOptional({ example: 106.700806 })
   @IsOptional()
   @IsNumber()
