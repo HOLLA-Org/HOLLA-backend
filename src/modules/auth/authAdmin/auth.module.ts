@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthUserService } from './auth.service';
-import { AuthUserController } from './auth.controller';
+import { AuthAdminService } from './auth.service';
+import { AuthAdminController } from './auth.controller';
 import { UsersModule } from '@/modules/users/users.module';
 import { JwtStrategy } from './passport/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { TokenModule } from '@/modules/token/token.module';
-import { LocalUserStrategy } from './passport/local.strategy';
+import { LocalAdminStrategy } from './passport/local.strategy';
 import { RedisModule } from '@/modules/redis/redis.module';
 
 @Module({
@@ -28,7 +28,7 @@ import { RedisModule } from '@/modules/redis/redis.module';
     PassportModule,
     RedisModule,
   ],
-  controllers: [AuthUserController],
-  providers: [AuthUserService, LocalUserStrategy, JwtStrategy],
+  controllers: [AuthAdminController],
+  providers: [AuthAdminService, LocalAdminStrategy, JwtStrategy],
 })
-export class AuthUserModule { }
+export class AuthAdminModule { }

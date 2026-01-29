@@ -7,7 +7,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { AuthUserService } from './auth.service';
+import { AuthAdminService } from './auth.service';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -22,10 +22,10 @@ import { CreateAuthDto } from './dto/create-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { ResendCodeDto } from './dto/resend-code.dto';
 
-@ApiTags('Authentication User') // Swagger category
-@Controller('auth')
-export class AuthUserController {
-  constructor(private readonly authService: AuthUserService) { }
+@ApiTags('Authentication Admin') // Swagger category
+@Controller('auth/admin')
+export class AuthAdminController {
+  constructor(private readonly authService: AuthAdminService) { }
 
   @Public()
   @Post('login')

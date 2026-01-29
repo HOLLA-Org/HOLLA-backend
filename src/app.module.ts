@@ -6,7 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformInterceptor } from './core/transform.interceptor';
-import { AuthModule } from './modules/auth/authUser/auth.module';
+import { AuthUserModule } from './modules/auth/authUser/auth.module';
+import { AuthAdminModule } from './modules/auth/authAdmin/auth.module';
 import { JwtAuthGuard } from './modules/auth/authUser/passport/jwt-auth.guard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
@@ -23,6 +24,8 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { LocationModule } from './modules/location/location.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { AmenityModule } from './modules/amenity/amenity.module';
+import { StatisticModule } from './modules/statistic/statistic.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -35,7 +38,10 @@ import { AmenityModule } from './modules/amenity/amenity.module';
     }),
     ScheduleModule.forRoot(),
     UsersModule,
-    AuthModule,
+    AuthUserModule,
+    AuthAdminModule,
+    StatisticModule,
+
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -94,4 +100,4 @@ import { AmenityModule } from './modules/amenity/amenity.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
