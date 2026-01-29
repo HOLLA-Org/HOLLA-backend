@@ -22,7 +22,7 @@ import { ROLES } from '@/constant';
 import { RefreshTokenRepo } from '@/modules/token/token.repo';
 
 @Injectable()
-export class AuthUserService {
+export class AuthAdminService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -142,7 +142,7 @@ export class AuthUserService {
       gender,
       date_of_birth,
       isActive: false,
-      role: ROLES.user,
+      role: ROLES.admin,
       codeId: activationCode,
       codeExpired: dayjs().add(5, 'minutes').toDate(),
     });

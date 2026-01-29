@@ -12,6 +12,11 @@ async function bootstrap() {
   const PORT = configService.get<string>('PORT', '8080');
 
   app.setGlobalPrefix('api/v1', { exclude: ['/'] });
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -27,6 +32,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('Authentication User', 'Authentication related endpoints')
+    .addTag('Authentication Admin', 'Authentication related endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Hotels', 'Hotel management endpoints')
     .addTag('Bookings', 'Booking management endpoints')
