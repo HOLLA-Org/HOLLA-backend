@@ -38,6 +38,9 @@ export class Booking {
 
   @Prop({ type: Date, required: true })
   expires_at: Date;
+
+  booked_at: Date;
+  updatedAt: Date;
 }
 
 
