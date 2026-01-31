@@ -8,7 +8,11 @@ import {
   Delete,
   Request,
   Query,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from '@/config/upload.config';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
@@ -21,6 +25,7 @@ import {
   ApiBody,
   ApiParam,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { Role, Roles } from '@/decorator/roles.decorator';
 
@@ -28,11 +33,11 @@ import { Role, Roles } from '@/decorator/roles.decorator';
 @ApiTags('Hotels')
 @Controller('hotel')
 export class HotelController {
-  constructor(private readonly hotelService: HotelService) {}
+  constructor(private readonly hotelService: HotelService) { }
 
   @Post()
   @Public()
-  @ApiOperation({ summary: 'Create a new hotel' })
+  @ApiOperation({ summary: '[Admin] Create a new hotel' })
   @ApiBody({ type: CreateHotelDto })
   @ResponseMessage('Create new hotel successfully')
   create(@Body() dto: CreateHotelDto) {
@@ -40,12 +45,11 @@ export class HotelController {
   }
 
   @Get()
-  @Public()
-  // @Roles(Role.User, Role.Admin)
+  @Roles(Role.User, Role.Admin)
   @ApiOperation({ summary: 'Get all hotels' })
   @ResponseMessage('Get all hotels successfully')
-  getAll() {
-    return this.hotelService.getAllHotels();
+  getAll(@Request() req: RequestWithUser) {
+    return this.hotelService.getAllHotels(req.user);
   }
 
   @Get('popular')
@@ -53,8 +57,8 @@ export class HotelController {
   @ApiOperation({ summary: 'Get popular hotels' })
   @ResponseMessage('Popular hotels fetched successfully')
   getPopular(@Request() req: RequestWithUser) {
-  return this.hotelService.getPopularHotels(req.user._id);
-}
+    return this.hotelService.getPopularHotels(req.user._id);
+  }
 
   @Get('recommended')
   @Roles(Role.User)
@@ -97,20 +101,129 @@ export class HotelController {
   getHotelById(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.hotelService.getHotelById(id, req.user._id);
   }
-  
+
 
   @Patch(':id')
   @Public()
-  @ApiOperation({ summary: 'Update hotel by id' })
+  @ApiOperation({ summary: '[Admin] Update hotel by id' })
   @ApiBody({ type: UpdateHotelDto })
   @ResponseMessage('Update hotel successfully')
   update(@Param('id') id: string, @Body() dto: UpdateHotelDto) {
     return this.hotelService.updateHotel(id, dto);
   }
 
+  @Post(':id/amenities')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: '[Admin] Add multiple amenities to hotel' })
+  @ApiParam({ name: 'id', description: 'Hotel ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        amenityIds: {
+          type: 'array',
+          items: { type: 'string' },
+          example: ['66c9f4c1a8e123456789abcd', '66c9f4c1a8e123456789abce'],
+        },
+      },
+    },
+  })
+  @ResponseMessage('Add amenities to hotel successfully')
+  addAmenities(
+    @Param('id') id: string,
+    @Body('amenityIds') amenityIds: string[],
+  ) {
+    return this.hotelService.addAmenitiesToHotel(id, amenityIds);
+  }
+
+  @Delete(':id/amenities/:amenityId')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: '[Admin] Remove amenity from hotel' })
+  @ApiParam({ name: 'id', description: 'Hotel ID' })
+  @ApiParam({ name: 'amenityId', description: 'Amenity ID' })
+  @ResponseMessage('Remove amenity from hotel successfully')
+  removeAmenity(
+    @Param('id') id: string,
+    @Param('amenityId') amenityId: string,
+  ) {
+    return this.hotelService.removeAmenityFromHotel(id, amenityId);
+  }
+
+  @Post(':id/images')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: '[Admin] Add multiple images to hotel' })
+  @ApiParam({ name: 'id', description: 'Hotel ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        imageUrls: {
+          type: 'array',
+          items: { type: 'string' },
+          example: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
+        },
+      },
+    },
+  })
+  @ResponseMessage('Add images to hotel successfully')
+  addImages(
+    @Param('id') id: string,
+    @Body('imageUrls') imageUrls: string[],
+  ) {
+    return this.hotelService.addImagesToHotel(id, imageUrls);
+  }
+
+  @Post(':id/images/upload')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: '[Admin] Upload images to hotel' })
+  @ApiParam({ name: 'id', description: 'Hotel ID' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
+  @UseInterceptors(FilesInterceptor('images', 10, multerConfig))
+  @ResponseMessage('Upload images successfully')
+  uploadImages(
+    @Param('id') id: string,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return this.hotelService.uploadImages(id, files);
+  }
+
+  @Delete(':id/images')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: '[Admin] Remove image from hotel' })
+  @ApiParam({ name: 'id', description: 'Hotel ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        imageUrl: { type: 'string', example: 'https://example.com/image.jpg' },
+      },
+    },
+  })
+  @ResponseMessage('Remove image from hotel successfully')
+  removeImage(
+    @Param('id') id: string,
+    @Body('imageUrl') imageUrl: string,
+  ) {
+    return this.hotelService.removeImageFromHotel(id, imageUrl);
+  }
+
   @Delete(':id')
   @Public()
-  @ApiOperation({ summary: 'Delete hotel by id' })
+  @ApiOperation({ summary: '[Admin] Delete hotel by id' })
   @ResponseMessage('Delete hotel successfully')
   remove(@Param('id') id: string) {
     return this.hotelService.remove(id);

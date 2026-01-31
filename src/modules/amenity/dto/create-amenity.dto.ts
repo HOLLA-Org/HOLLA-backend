@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateAmenityDto {
   @ApiProperty({ example: 'Wi-Fi miễn phí' })
@@ -9,6 +9,7 @@ export class CreateAmenityDto {
 
   @ApiProperty({ example: 'wifi' })
   @IsString()
-  @IsNotEmpty()
-  icon: string;
+  @IsOptional()
+  icon?: string;
 }
+

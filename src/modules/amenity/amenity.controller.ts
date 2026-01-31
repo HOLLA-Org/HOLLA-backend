@@ -21,7 +21,7 @@ import { Public, ResponseMessage } from '@/decorator/customize';
 @ApiTags('Amenity')
 @Controller('amenities')
 export class AmenityController {
-  constructor(private readonly amenityService: AmenityService) {}
+  constructor(private readonly amenityService: AmenityService) { }
 
   @Public()
   @Get()
@@ -35,7 +35,7 @@ export class AmenityController {
   // @Roles(Role.Admin)
   @Public()
   @Get('all')
-  @ApiOperation({ summary: 'Get all amenities (include inactive) - admin' })
+  @ApiOperation({ summary: '[Admin] Get all amenities (include inactive)' })
   @ResponseMessage('Get all amenities successfully')
   getAllIncludeInactive() {
     return this.amenityService.findAllIncludeInactive();
@@ -45,7 +45,7 @@ export class AmenityController {
   // @Roles(Role.Admin)
   @Public()
   @Post()
-  @ApiOperation({ summary: 'Create amenity (admin)' })
+  @ApiOperation({ summary: '[Admin] Create amenity' })
   @ResponseMessage('Amenity created successfully')
   create(@Body() dto: CreateAmenityDto) {
     return this.amenityService.create(dto);
@@ -55,7 +55,7 @@ export class AmenityController {
   // @Roles(Role.Admin)
   @Public()
   @Patch(':id')
-  @ApiOperation({ summary: 'Update amenity (admin)' })
+  @ApiOperation({ summary: '[Admin] Update amenity' })
   @ResponseMessage('Amenity updated successfully')
   update(
     @Param('id') id: string,
@@ -68,7 +68,7 @@ export class AmenityController {
   // @Roles(Role.Admin)
   @Public()
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete amenity (admin)' })
+  @ApiOperation({ summary: '[Admin] Delete amenity' })
   @ResponseMessage('Amenity deleted successfully')
   remove(@Param('id') id: string) {
     return this.amenityService.remove(id);
