@@ -8,7 +8,7 @@ export class Amenity {
   @Prop({ required: true, unique: true })
   name: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   icon: string;
 
   @Prop({ default: true })

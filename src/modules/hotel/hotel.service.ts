@@ -8,6 +8,10 @@ import { isValidObjectId } from '@/utils';
 import { MediaService } from '../media/media.service';
 import { User } from '../users/schemas/user.schema';
 
+import { Role } from '@/decorator/roles.decorator';
+
+import { Amenity } from '../amenity/schemas/amenity.schema';
+
 @Injectable()
 export class HotelService {
   constructor(
@@ -15,7 +19,17 @@ export class HotelService {
     private readonly hotelModel: Model<Hotel>,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
-  ) {}
+    @InjectModel(Amenity.name)
+    private readonly amenityModel: Model<Amenity>,
+    private readonly mediaService: MediaService,
+  ) { }
+
+  async uploadImages(id: string, files: Express.Multer.File[]) {
+    const imageUrls = await Promise.all(
+      files.map((file) => this.mediaService.uploadImage(file)),
+    );
+    return this.addImagesToHotel(id, imageUrls);
+  }
 
   async create(createHotelDto: CreateHotelDto): Promise<Hotel> {
     const { name } = createHotelDto;
@@ -30,15 +44,95 @@ export class HotelService {
     return this.hotelModel.create(createHotelDto);
   }
 
-  async getAllHotels(userId?: Types.ObjectId) {
+  async addAmenitiesToHotel(hotelId: string, amenityIds: string[]) {
+    if (!isValidObjectId(hotelId)) {
+      throw new BadRequestException('Hotel ID is not valid');
+    }
+
+    // Optional: Verify all IDs are valid ObjectIds
+    amenityIds.forEach(id => {
+      if (!isValidObjectId(id)) {
+        throw new BadRequestException(`Amenity ID "${id}" is not valid`);
+      }
+    });
+
+    const hotel = await this.hotelModel.findByIdAndUpdate(
+      hotelId,
+      { $addToSet: { amenities: { $each: amenityIds } } },
+      { new: true },
+    );
+
+    if (!hotel) {
+      throw new BadRequestException('Hotel not found');
+    }
+
+    return hotel;
+  }
+
+  async removeAmenityFromHotel(hotelId: string, amenityId: string) {
+    if (!isValidObjectId(hotelId) || !isValidObjectId(amenityId)) {
+      throw new BadRequestException('ID is not valid');
+    }
+
+    const hotel = await this.hotelModel.findByIdAndUpdate(
+      hotelId,
+      { $pull: { amenities: amenityId } },
+      { new: true },
+    );
+
+    if (!hotel) {
+      throw new BadRequestException('Hotel not found');
+    }
+
+    return hotel;
+  }
+
+  async addImagesToHotel(hotelId: string, imageUrls: string[]) {
+    if (!isValidObjectId(hotelId)) {
+      throw new BadRequestException('Hotel ID is not valid');
+    }
+
+    const hotel = await this.hotelModel.findByIdAndUpdate(
+      hotelId,
+      { $addToSet: { images: { $each: imageUrls } } },
+      { new: true },
+    );
+
+    if (!hotel) {
+      throw new BadRequestException('Hotel not found');
+    }
+
+    return hotel;
+  }
+
+  async removeImageFromHotel(hotelId: string, imageUrl: string) {
+    if (!isValidObjectId(hotelId)) {
+      throw new BadRequestException('Hotel ID is not valid');
+    }
+
+    const hotel = await this.hotelModel.findByIdAndUpdate(
+      hotelId,
+      { $pull: { images: imageUrl } },
+      { new: true },
+    );
+
+    if (!hotel) {
+      throw new BadRequestException('Hotel not found');
+    }
+
+    return hotel;
+  }
+
+  async getAllHotels(user: any) {
+    const isAdmin = user.role === Role.Admin;
+    const matchQuery = isAdmin ? {} : { availableRooms: { $gt: 0 } };
+
     return this.hotelModel.aggregate([
       {
-        $match: {
-          availableRooms: { $gt: 0 },
-        },
+        $match: matchQuery,
       },
       ...this.amenityLookupPipeline(),
-      ...this.favoriteLookupPipeline(userId?.toString()),
+      ...this.favoriteLookupPipeline(user._id?.toString()),
     ]);
   }
 
@@ -162,7 +256,7 @@ export class HotelService {
       ...this.favoriteLookupPipeline(userId?.toString()),
     ]);
   }
-  
+
   async findOneByName({ name }: { name: string }) {
     const hotel = await this.hotelModel.findOne({ name });
 
@@ -271,33 +365,33 @@ export class HotelService {
   }
 
   private amenityLookupPipeline() {
-  return [
-    {
-      $addFields: {
-        amenities: {
-          $map: {
-            input: '$amenities',
-            as: 'amenityId',
-            in: { $toObjectId: '$$amenityId' },
+    return [
+      {
+        $addFields: {
+          amenities: {
+            $map: {
+              input: '$amenities',
+              as: 'amenityId',
+              in: { $toObjectId: '$$amenityId' },
+            },
           },
         },
       },
-    },
-    {
-      $lookup: {
-        from: 'amenities',
-        localField: 'amenities',
-        foreignField: '_id',
-        as: 'amenities',
+      {
+        $lookup: {
+          from: 'amenities',
+          localField: 'amenities',
+          foreignField: '_id',
+          as: 'amenities',
+        },
       },
-    },
-    {
-      $project: {
-        'amenities.isActive': 0,
-        'amenities.createdAt': 0,
-        'amenities.updatedAt': 0,
+      {
+        $project: {
+          'amenities.isActive': 0,
+          'amenities.createdAt': 0,
+          'amenities.updatedAt': 0,
+        },
       },
-    },
-  ];
-}
+    ];
+  }
 }
