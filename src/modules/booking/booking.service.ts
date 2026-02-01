@@ -216,6 +216,25 @@ export class BookingService {
     return booking.save();
   }
 
+  async checkOut(id: string): Promise<Booking> {
+    const bookingObjectId = new Types.ObjectId(id);
+    const booking = await this.bookingModel.findById(bookingObjectId);
+    if (!booking) throw new BadRequestException('Booking not found');
+
+    if (booking.status !== BookingStatus.ACTIVE) {
+      throw new BadRequestException('Booking is not active');
+    }
+
+    booking.status = BookingStatus.COMPLETED;
+    await booking.save();
+
+    await this.hotelModel.findByIdAndUpdate(booking.hotel_id, {
+      $inc: { availableRooms: 1 },
+    });
+
+    return booking;
+  }
+
   async getAll(): Promise<Booking[]> {
     return this.bookingModel
       .find()
