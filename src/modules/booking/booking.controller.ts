@@ -85,6 +85,15 @@ export class BookingController {
     return this.bookingService.adminCancelBooking(id);
   }
 
+  @Patch('admin/:id/check-out')
+  @Public()
+  @ApiOperation({ summary: '[Admin] Check-out a booking' })
+  @ApiResponse({ status: 200, description: 'Booking checked-out successfully.' })
+  @ResponseMessage('Booking checked-out successfully.')
+  adminCheckOut(@Param('id') id: string) {
+    return this.bookingService.checkOut(id);
+  }
+
   @Get('history')
   @ApiOperation({ summary: 'Get booking history' })
   @ApiResponse({
