@@ -50,10 +50,18 @@ async function bootstrap() {
     },
   }); // http://localhost:PORT/api-docs
 
+  // Dev
+  /*
   await app.listen(PORT, () => {
     console.log(`App running at http://${HOST}:${PORT}`);
     console.log(`Swagger Docs available at http://${HOST}:${PORT}/api-docs`);
   });
+  */
+
+  // Prod
+  const port = process.env.PORT;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 PROD running on port ${port}`);
 }
 
 bootstrap();
