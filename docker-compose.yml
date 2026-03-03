@@ -16,6 +16,23 @@ services:
     volumes:
       - redis_data_container:/data
 
+  backend:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "4000:8080"
+    env_file:
+      - .env
+    environment:
+      - MONGODB_URI=mongodb://root:123456@mongodb:27017/holla?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - mongodb
+      - redis
+
 volumes:
   mongodb_data_container:
   redis_data_container:
