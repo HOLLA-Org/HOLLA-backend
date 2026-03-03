@@ -18,9 +18,6 @@ services:
 
   backend:
     build: .
-    volumes:
-      - .:/app
-      - /app/node_modules
     ports:
       - "8000:8080"
     env_file:
