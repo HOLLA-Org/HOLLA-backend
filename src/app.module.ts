@@ -46,12 +46,9 @@ import { StatisticModule } from './modules/statistic/statistic.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          service: 'gmail',
           host: 'smtp.gmail.com',
-          port: 456,
-          // secure: true,
-          // ignoreTLS: true,
-          // secure: false,
+          port: 587,
+          secure: false,
           auth: {
             user: configService.get<string>('MAIL_USER'),
             pass: configService.get<string>('MAIL_PASSWORD'),
