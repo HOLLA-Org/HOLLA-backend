@@ -23,12 +23,8 @@ jobs:
             git checkout production
             git pull origin production
 
-            docker build -t holla-be .
-            docker stop holla-be || true
-            docker rm holla-be || true
+            docker compose -p holla down
 
-            docker run -d \
-              --name holla-be \
-              -p 8000:8080 \
-              --env-file .env \
-              holla-be
+            docker compose -p holla up -d --build
+
+            docker image prune -f
