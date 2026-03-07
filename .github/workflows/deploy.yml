@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy using SSH
         uses: appleboy/ssh-action@master
@@ -17,8 +18,17 @@ jobs:
           port: 22
           script: |
             cd /var/www/HOLLA-backend
+
             git fetch origin
             git checkout production
             git pull origin production
-            docker compose -p holla down
-            docker compose -p holla up -d --build
+
+            docker build -t holla-be .
+            docker stop holla-be || true
+            docker rm holla-be || true
+
+            docker run -d \
+              --name holla-be \
+              -p 8000:8080 \
+              --env-file .env \
+              holla-be
